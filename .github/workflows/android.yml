@@ -32,6 +32,9 @@ jobs:
       - name: Generate Android project files
         run: flutter create --org com.monstrvip --platforms=android --project-name baby_puzzle_world .
 
+      - name: Generate offline sound effects
+        run: python3 tool/generate_audio.py
+
       - name: Install dependencies
         run: flutter pub get
 
