@@ -51,7 +51,7 @@ jobs:
         run: flutter test
 
       - name: Verify generated sound assets
-        run: test -s assets/audio/tap.wav && test -s assets/audio/correct.wav && test -s assets/audio/win.wav
+        run: test -s assets/audio/tap.wav && test -s assets/audio/correct.wav && test -s assets/audio/win.wav && test -s assets/audio/background.wav
 
       - name: Build APK
         run: flutter build apk --release
