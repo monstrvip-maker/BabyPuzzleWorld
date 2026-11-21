@@ -40,7 +40,7 @@ jobs:
 
       - name: Analyze (non-blocking diagnostics)
         continue-on-error: true
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        run: flutter analyze
 
       - name: Verify generated sound assets
         run: test -s assets/audio/tap.wav && test -s assets/audio/correct.wav && test -s assets/audio/win.wav
