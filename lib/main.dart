@@ -172,13 +172,13 @@ class _PuzzlePageState extends State<PuzzlePage> {
       won = slots.every((v) => v != null) &&
           List.generate(n * n, (i) => slots[i] == i).every((v) => v);
     });
-    SystemSound.play(won ? SystemSoundType.alert : SystemSoundType.click);
+    if (won) { GameAudio.win(); } else { GameAudio.correct(); }
     HapticFeedback.selectionClick();
     if (won) { HapticFeedback.heavyImpact(); _finish(); }
   }
 
   Future<void> _finish() async {
-    SystemSound.play(SystemSoundType.alert);
+    GameAudio.win();
     HapticFeedback.mediumImpact();
     await widget.onWin(widget.item.asset);
     if (!mounted) return;
