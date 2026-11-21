@@ -340,7 +340,8 @@ class _ShapeFitGamePageState extends State<ShapeFitGamePage> {
   int round = 0;
   void _next() {
     target = ShapeKind.values[_random.nextInt(ShapeKind.values.length)];
-    options = <ShapeKind>{target, ...ShapeKind.values.where((s) => s != target).toList()..shuffle(_random).take(3)}.toList()..shuffle(_random);
+    final others = ShapeKind.values.where((s) => s != target).toList()..shuffle(_random);
+    options = <ShapeKind>[target, ...others.take(3)]..shuffle(_random);
     selected = null;
     round++;
   }
@@ -456,12 +457,8 @@ class _ColoringGamePageState extends State<ColoringGamePage> {
       const Padding(padding: EdgeInsets.all(14), child: Text('Выбери цвет и нажимай на части бабочки', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
       Expanded(child: Center(child: GestureDetector(
         onTapDown: (d) {
-          final box = context.findRenderObject() as RenderBox?;
-          if (box == null) return;
-          final local = d.localPosition;
-          final size = box.size;
-          final normalizedX = local.dx / size.width;
-          final normalizedY = local.dy / size.height;
+          final normalizedX = d.localPosition.dx / 320;
+          final normalizedY = d.localPosition.dy / 330;
           setState(() => selectedPart = normalizedY < .42 ? (normalizedX < .5 ? 0 : 1) : (normalizedX < .5 ? 2 : 3));
           GameAudio.tap();
         },
@@ -490,7 +487,7 @@ class _ButterflyPainter extends CustomPainter {
     final sx=size.width/320, sy=size.height/330;
     canvas.save(); canvas.scale(sx,sy);
     final outline=Paint()..color=const Color(0xFF493C43)..style=PaintingStyle.stroke..strokeWidth=5;
-    final body=Paint()..color=fills[4] ?? Colors.white..style=PaintingStyle.fill;
+    final body=Paint()..color=(fills[4] ?? Colors.white)..style=PaintingStyle.fill;
     final leftTop=Rect.fromLTWH(25,55,125,105), rightTop=Rect.fromLTWH(170,55,125,105);
     final leftBottom=Rect.fromLTWH(38,165,110,115), rightBottom=Rect.fromLTWH(172,165,110,115);
     final wingRects=[leftTop,rightTop,leftBottom,rightBottom];
