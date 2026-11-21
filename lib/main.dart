@@ -102,6 +102,7 @@ class _PuzzlePageState extends State<PuzzlePage> {
   late List<int> order;
   late List<int?> slots;
   bool won = false;
+  int? selectedPiece;
   static const int n = 2;
 
   @override
@@ -114,11 +115,13 @@ class _PuzzlePageState extends State<PuzzlePage> {
     order = List.generate(n * n, (i) => i)..shuffle();
     slots = List<int?>.filled(n * n, null);
     won = false;
+    selectedPiece = null;
   }
 
   void _drop(int piece, int slot) {
-    if (won || slots[slot] != null) return;
+    if (won || slots[slot] != null || !order.contains(piece)) return;
     setState(() {
+      selectedPiece = null;
       slots[slot] = piece;
       order.remove(piece);
       won = slots.every((v) => v != null) &&
@@ -181,15 +184,28 @@ class _PuzzlePageState extends State<PuzzlePage> {
         ),
       ),
     );
-    if (!draggable) return image;
+    final selectable = GestureDetector(
+      onTap: () => setState(() => selectedPiece = piece),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: selectedPiece == piece ? const Color(0xFF3478E8) : Colors.transparent,
+            width: 3,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: image,
+      ),
+    );
+    if (!draggable) return selectable;
     return Draggable<int>(
       data: piece,
       feedback: Material(
         color: Colors.transparent,
         child: CharacterImage(widget.item.asset, width: 86, height: 86),
       ),
-      childWhenDragging: const SizedBox(width: 74, height: 74),
-      child: image,
+      childWhenDragging: const SizedBox(width: 80, height: 80),
+      child: selectable,
     );
   }
 
@@ -213,7 +229,7 @@ class _PuzzlePageState extends State<PuzzlePage> {
             const Padding(
               padding: EdgeInsets.all(12),
               child: Text(
-                'Перетащи детали на нужные места',
+                'Нажми на деталь, затем на клетку — или перетащи её',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
               ),
             ),
@@ -241,12 +257,16 @@ class _PuzzlePageState extends State<PuzzlePage> {
                         builder: (context, candidates, rejects) =>
                             GestureDetector(
                           onTap: () {
-                            final piece = slots[index];
-                            if (piece != null && !won) {
+                            if (won) return;
+                            final placed = slots[index];
+                            if (placed != null) {
                               setState(() {
-                                order.add(piece);
+                                order.add(placed);
                                 slots[index] = null;
+                                selectedPiece = null;
                               });
+                            } else if (selectedPiece != null) {
+                              _drop(selectedPiece!, index);
                             }
                           },
                           child: Container(
@@ -263,12 +283,20 @@ class _PuzzlePageState extends State<PuzzlePage> {
                                       size: 35,
                                     ),
                                   )
-                                : Center(
-                                    child: CharacterImage(
-                                      widget.item.asset,
-                                      width: 90,
-                                      height: 90,
-                                    ),
+                                : Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      CharacterImage(widget.item.asset, width: 90, height: 90),
+                                      Positioned(
+                                        right: 5,
+                                        top: 5,
+                                        child: CircleAvatar(
+                                          radius: 11,
+                                          backgroundColor: const Color(0xFF3478E8),
+                                          child: Text('${slots[index]! + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                           ),
                         ),
