@@ -105,7 +105,7 @@ class _HomePageState extends State<HomePage> {
         final cat=cats[i+1]; final list=items.where((e)=>e.category==cat).toList(); final item=list.first;
         return InkWell(borderRadius:BorderRadius.circular(22),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>LevelsPage(category:cat,items:list,onWin:reward))),
           child:Container(decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(22),boxShadow:[BoxShadow(color:Colors.blue.withOpacity(.07),blurRadius:12,offset:const Offset(0,5))]),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[
-            Expanded(child:Padding(padding:const EdgeInsets.all(8),child:CharacterImage(item.asset))),
+            Expanded(child:Padding(padding:const EdgeInsets.all(8),child:CharacterImage(item.asset, width: 140, height: 140))),
             Text(cat,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w800,color:Color(0xFF30456D))),
             Padding(padding:const EdgeInsets.only(bottom:12,top:3),child:Text('${list.length} пазла',style:const TextStyle(color:Color(0xFF8290A8))))
           ])));
@@ -118,7 +118,7 @@ class _HomePageState extends State<HomePage> {
 class LevelsPage extends StatelessWidget {
  final String category; final List<PuzzleItem> items; final Future<void> Function(String) onWin;
  const LevelsPage({super.key,required this.category,required this.items,required this.onWin});
- @override Widget build(BuildContext context)=>Scaffold(backgroundColor:const Color(0xFFF4F9FF),appBar:AppBar(title:Text(category,style:const TextStyle(fontWeight:FontWeight.w900)),backgroundColor:const Color(0xFFF4F9FF)),body:GridView.builder(padding:const EdgeInsets.all(16),itemCount:items.length,gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,crossAxisSpacing:14,mainAxisSpacing:14),itemBuilder:(c,i){final p=items[i];return InkWell(onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>PuzzlePage(item:p,onWin:onWin))),child:Container(decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(24)),child:Column(children:[Expanded(child:Padding(padding:const EdgeInsets.all(10),child:CharacterImage(p.asset))),Padding(padding:const EdgeInsets.only(bottom:14),child:Text(p.name,style:const TextStyle(fontWeight:FontWeight.bold,fontSize:17)))])));}));
+ @override Widget build(BuildContext context)=>Scaffold(backgroundColor:const Color(0xFFF4F9FF),appBar:AppBar(title:Text(category,style:const TextStyle(fontWeight:FontWeight.w900)),backgroundColor:const Color(0xFFF4F9FF)),body:GridView.builder(padding:const EdgeInsets.all(16),itemCount:items.length,gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,crossAxisSpacing:14,mainAxisSpacing:14),itemBuilder:(c,i){final p=items[i];return InkWell(onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>PuzzlePage(item:p,onWin:onWin))),child:Container(decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(24)),child:Column(children:[Expanded(child:Padding(padding:const EdgeInsets.all(10),child:CharacterImage(p.asset, width: 140, height: 140))),Padding(padding:const EdgeInsets.only(bottom:14),child:Text(p.name,style:const TextStyle(fontWeight:FontWeight.bold,fontSize:17)))])));}));
 }
 
 class PuzzlePage extends StatefulWidget {
