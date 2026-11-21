@@ -19,12 +19,23 @@ class CharacterImage extends StatelessWidget {
   final double? width, height;
   final BoxFit fit;
   const CharacterImage(this.name, {super.key, this.width, this.height, this.fit=BoxFit.contain});
-  @override Widget build(BuildContext context) => SizedBox(
-    width: width, height: height,
-    child: LayoutBuilder(builder: (context, constraints) => Center(
-      child: Text(characterAssets[name] ?? '🧩', textAlign: TextAlign.center,
-        style: TextStyle(fontSize: (constraints.maxWidth.isFinite ? constraints.maxWidth : 120) * .82, height: 1.0)),
-    )),
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: width,
+    height: height,
+    child: Center(
+      child: FittedBox(
+        fit: fit,
+        alignment: Alignment.center,
+        child: Text(
+          characterAssets[name] ?? '🧩',
+          maxLines: 1,
+          softWrap: false,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 112, height: 1.0),
+        ),
+      ),
+    ),
   );
 }
 
