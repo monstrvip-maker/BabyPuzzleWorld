@@ -334,7 +334,119 @@ class CountGamePage extends StatefulWidget{const CountGamePage({super.key});@ove
 class _CountState extends State<CountGamePage>{late String emoji;late int count;late List<int> choices;int score=0;void next(){emoji=deck(6).first.value;count=Random().nextInt(5)+1;choices=({count,max(1,count-1),count+1,Random().nextInt(5)+1}).toList()..shuffle();}@override void initState(){super.initState();next();}void choose(int n){if(n==count){score++;won(context,'Верно! Здесь '+count.toString()+' предметов.',()=>setState(next));}else{GameAudio.tap();ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Давай пересчитаем!')));}}@override Widget build(BuildContext c)=>GameShell('Сосчитай',const Color(0xFFE8F7E9),Column(children:[const SizedBox(height:20),Text('⭐ '+score.toString(),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Сколько предметов?',style:TextStyle(fontSize:22,fontWeight:FontWeight.bold)),Expanded(child:Center(child:Wrap(alignment:WrapAlignment.center,spacing:12,runSpacing:12,children:List.generate(count,(i)=>Text(emoji,style:const TextStyle(fontSize:58)))))),Wrap(spacing:12,children:choices.map((v)=>FilledButton(onPressed:()=>choose(v),child:Text(v.toString(),style:const TextStyle(fontSize:24)))).toList()),const SizedBox(height:40)]));}
 
 class ColorGamePage extends StatefulWidget{const ColorGamePage({super.key});@override State<ColorGamePage> createState()=>_ColorState();}
-class _ColorState extends State<ColorGamePage>{final colors=<Color>[Colors.red,Colors.blue,Colors.green,Colors.orange,Colors.purple];final names=<String>['красный','синий','зелёный','оранжевый','фиолетовый'];late int target;int score=0;void next(){target=Random().nextInt(colors.length);}@override void initState(){super.initState();next();}void choose(int i){if(i==target){score++;won(context,'Правильно! Это '+names[target]+' цвет.',()=>setState(next));}else{GameAudio.tap();}}@override Widget build(BuildContext c)=>GameShell('Найди цвет',const Color(0xFFFFEAF0),Column(children:[const SizedBox(height:24),Text('⭐ '+score.toString(),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Найди такой же цвет',style:TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const SizedBox(height:18),AnimatedContainer(duration:const Duration(milliseconds:350),width:150,height:150,decoration:BoxDecoration(color:colors[target],shape:BoxShape.circle)),const Spacer(),Wrap(spacing:16,runSpacing:16,children:List.generate(colors.length,(i)=>InkWell(onTap:()=>choose(i),child:Container(width:82,height:82,decoration:BoxDecoration(color:colors[i],borderRadius:BorderRadius.circular(22),border:Border.all(color:Colors.white,width:4)))))),const SizedBox(height:60)]));}
+class _ColorState extends State<ColorGamePage> {
+  static const colors = <Color>[
+    Color(0xFFFF514D), Color(0xFF3199F5), Color(0xFF4DB66A),
+    Color(0xFFFFA51F), Color(0xFFAE55D6), Color(0xFFFF70A6),
+  ];
+  static const names = <String>['красный','синий','зелёный','оранжевый','фиолетовый','розовый'];
+  final random = Random();
+  late int target;
+  late MapEntry<String, String> friend;
+  int score = 0;
+  int? wrongChoice;
+  MapEntry<String, String>? _previousFriend;
+  int? _previousTarget;
+  void next() {
+    final available = characterAssets.entries.where((e) => e.key != _previousFriend?.key).toList();
+    friend = available[random.nextInt(available.length)];
+    target = random.nextInt(colors.length);
+    if (_previousTarget != null && target == _previousTarget) target = (target + 1 + random.nextInt(colors.length - 1)) % colors.length;
+    wrongChoice = null;
+  }
+  void makeNext() { _previousFriend = friend; _previousTarget = target; next(); }
+  @override void initState() { super.initState(); next(); }
+  void choose(int i) {
+    if (i == target) {
+      score++;
+      GameAudio.correct();
+      won(context, 'Ура! ' + friend.value + ' нашёл ' + names[target] + ' цвет! ⭐', () => setState(makeNext));
+    } else {
+      setState(() => wrongChoice = i);
+      GameAudio.tap();
+      Future.delayed(const Duration(milliseconds: 450), () { if (mounted) setState(() => wrongChoice = null); });
+    }
+  }
+  Widget colorButton(int i) {
+    final selected = wrongChoice == i;
+    return GestureDetector(
+      onTap: () => choose(i),
+      child: AnimatedScale(
+        scale: selected ? .88 : 1,
+        duration: const Duration(milliseconds: 180),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: 88, height: 88,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: [Color.lerp(colors[i], Colors.white, .22)!, colors[i], Color.lerp(colors[i], Colors.black, .08)!]),
+            borderRadius: BorderRadius.circular(27),
+            border: Border.all(color: selected ? Colors.red : Colors.white, width: selected ? 5 : 4),
+            boxShadow: [BoxShadow(color: colors[i].withOpacity(.25), blurRadius: 13, offset: const Offset(0, 7))],
+          ),
+          child: Stack(children: [
+            Positioned(left: 15, top: 10, child: Container(width: 24, height: 9, decoration: BoxDecoration(color: Colors.white.withOpacity(.42), borderRadius: BorderRadius.circular(9)))),
+            if (selected) const Center(child: Icon(Icons.close_rounded, color: Colors.white, size: 34)),
+          ]),
+        ),
+      ),
+    );
+  }
+  @override Widget build(BuildContext c) => GameShell(
+    'Найди цвет', const Color(0xFFFFEAF0),
+    Container(
+      decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [Color(0xFFFFE5F0), Color(0xFFFFF4D8), Color(0xFFE4F5FF)])),
+      child: Column(children: [
+        const SizedBox(height: 8),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          const Icon(Icons.star_rounded, color: Color(0xFFFFC928), size: 30),
+          Text(' ' + score.toString(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF4B426D))),
+        ]),
+        const SizedBox(height: 5),
+        const Text('Помоги другу найти цвет!', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF39466D))),
+        const SizedBox(height: 8),
+        Expanded(child: Column(children: [
+          Expanded(flex: 5, child: Center(child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 420),
+            transitionBuilder: (child, animation) => FadeTransition(opacity: animation,
+              child: ScaleTransition(scale: Tween<double>(begin: .72, end: 1).animate(CurvedAnimation(parent: animation, curve: Curves.elasticOut)), child: child)),
+            child: Container(
+              key: ValueKey(friend.key),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+              decoration: BoxDecoration(color: Colors.white.withOpacity(.82), borderRadius: BorderRadius.circular(30),
+                boxShadow: [BoxShadow(color: const Color(0xFF9E80B8).withOpacity(.13), blurRadius: 18, offset: const Offset(0, 8))]),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(friend.value, style: const TextStyle(fontSize: 86)),
+                const Text('Привет! Помоги мне!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF51476D))),
+              ]),
+            ),
+          ))),
+          const Text('Найди такой же цвет', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: Color(0xFF39466D))),
+          const SizedBox(height: 12),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: FadeTransition(opacity: animation, child: child)),
+            child: Container(
+              key: ValueKey(target), width: 142, height: 142,
+              decoration: BoxDecoration(shape: BoxShape.circle,
+                gradient: RadialGradient(center: const Alignment(-.35, -.4), radius: .95,
+                  colors: [Color.lerp(colors[target], Colors.white, .28)!, colors[target], Color.lerp(colors[target], Colors.black, .10)!]),
+                boxShadow: [BoxShadow(color: colors[target].withOpacity(.36), blurRadius: 25, spreadRadius: 3, offset: const Offset(0, 10))],
+                border: Border.all(color: Colors.white, width: 7)),
+              child: const Center(child: Icon(Icons.auto_awesome, color: Colors.white70, size: 34)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text('Выбери цветную кнопочку 👇', style: TextStyle(fontSize: 14, color: Color(0xFF776B8A), fontWeight: FontWeight.w600)),
+          const SizedBox(height: 10),
+          Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+            child: Wrap(alignment: WrapAlignment.center, spacing: 15, runSpacing: 13, children: List.generate(colors.length, colorButton))),
+        ])),
+      ]),
+    ),
+  );
+}
 
 class OddGamePage extends StatefulWidget{const OddGamePage({super.key});@override State<OddGamePage> createState()=>_OddState();}
 class _OddState extends State<OddGamePage>{late List<MapEntry<String,String>> opts;late int odd;int score=0;void next(){final d=deck(6);final same=d.take(3).toList();final different=d[3];opts=[...same,different]..shuffle();odd=opts.indexWhere((e)=>e.key==different.key);}@override void initState(){super.initState();next();}void choose(int i){if(i==odd){score++;won(context,'Верно! Эта картинка отличается.',()=>setState(next));}else{GameAudio.tap();}}@override Widget build(BuildContext c)=>GameShell('Что лишнее?',const Color(0xFFFFF4D8),Column(children:[const SizedBox(height:20),Text('⭐ '+score.toString(),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Найди непохожую картинку',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),Expanded(child:GridView.builder(padding:const EdgeInsets.all(18),itemCount:4,gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,crossAxisSpacing:14,mainAxisSpacing:14),itemBuilder:(c,i)=>tile(opts[i].value,()=>choose(i),size:62)))]));}
