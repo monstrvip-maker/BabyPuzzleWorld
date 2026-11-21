@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'character_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
