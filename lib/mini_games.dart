@@ -44,6 +44,14 @@ class MiniGamesSection extends StatelessWidget {
           ['Повтори ряд','🔶','Продолжи узор',Color(0xFFE3EEFF),SequenceGamePage()],
         ],
       },
+      {
+        'title': 'Формы и творчество',
+        'subtitle': 'Подбирай детали и раскрашивай',
+        'games': <List<dynamic>>[
+          ['Подбери форму','🧩','Вставь недостающую деталь',Color(0xFFE4F5EA),ShapeFitGamePage()],
+          ['Раскраска','🖍️','Раскрась картинку пальцем',Color(0xFFFFE8EF),ColoringGamePage()],
+        ],
+      },
     ];
 
     return Column(
@@ -279,3 +287,225 @@ class _OddState extends State<OddGamePage>{late List<MapEntry<String,String>> op
 
 class SequenceGamePage extends StatefulWidget{const SequenceGamePage({super.key});@override State<SequenceGamePage> createState()=>_SequenceState();}
 class _SequenceState extends State<SequenceGamePage>{final patterns=<List<String>>[['🔴','🔵','🔴','🔵'],['⭐','🌙','⭐','🌙'],['🍎','🍌','🍎','🍌'],['🐱','🐶','🐱','🐶']];late List<String> row;late String answer;int score=0;void next(){final p=patterns[Random().nextInt(patterns.length)];row=p.take(3).toList();answer=p[3];}@override void initState(){super.initState();next();}void choose(String s){if(s==answer){score++;won(context,'Отлично! Ты продолжил узор.',()=>setState(next));}else{GameAudio.tap();}}@override Widget build(BuildContext c)=>GameShell('Повтори ряд',const Color(0xFFEAF0FF),Column(children:[const SizedBox(height:24),Text('⭐ '+score.toString(),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Что должно быть дальше?',style:TextStyle(fontSize:21,fontWeight:FontWeight.bold)),const SizedBox(height:50),Row(mainAxisAlignment:MainAxisAlignment.spaceEvenly,children:[...row.map((e)=>Text(e,style:const TextStyle(fontSize:54))),const Text('❓',style:TextStyle(fontSize:54))]),const Spacer(),Wrap(spacing:24,children:[FilledButton(onPressed:()=>choose(answer),child:Text(answer,style:const TextStyle(fontSize:30))),FilledButton(onPressed:()=>choose('❌'),child:const Text('❌',style:TextStyle(fontSize:30)))]),const SizedBox(height:70)]));}
+
+enum ShapeKind { circle, triangle, square, star, heart }
+
+String shapeLabel(ShapeKind s) => switch(s) {
+  ShapeKind.circle => 'Круг',
+  ShapeKind.triangle => 'Треугольник',
+  ShapeKind.square => 'Квадрат',
+  ShapeKind.star => 'Звезда',
+  ShapeKind.heart => 'Сердце',
+};
+
+Path shapePath(ShapeKind kind, Rect r) {
+  final p = Path();
+  switch (kind) {
+    case ShapeKind.circle:
+      p.addOval(r);
+    case ShapeKind.square:
+      p.addRRect(RRect.fromRectAndRadius(r, const Radius.circular(8)));
+    case ShapeKind.triangle:
+      p.moveTo(r.center.dx, r.top);
+      p.lineTo(r.right, r.bottom);
+      p.lineTo(r.left, r.bottom);
+      p.close();
+    case ShapeKind.star:
+      for (var i = 0; i < 10; i++) {
+        final radius = i.isEven ? r.width / 2 : r.width / 4;
+        final a = -pi / 2 + i * pi / 5;
+        final pt = Offset(r.center.dx + cos(a) * radius, r.center.dy + sin(a) * radius);
+        if (i == 0) { p.moveTo(pt.dx, pt.dy); } else { p.lineTo(pt.dx, pt.dy); }
+      }
+      p.close();
+    case ShapeKind.heart:
+      p.moveTo(r.center.dx, r.bottom);
+      p.cubicTo(r.left - r.width * .12, r.center.dy, r.left + r.width * .15, r.top - r.height * .1, r.center.dx, r.top + r.height * .28);
+      p.cubicTo(r.right - r.width * .15, r.top - r.height * .1, r.right + r.width * .12, r.center.dy, r.center.dx, r.bottom);
+      p.close();
+  }
+  return p;
+}
+
+class ShapeFitGamePage extends StatefulWidget {
+  const ShapeFitGamePage({super.key});
+  @override State<ShapeFitGamePage> createState() => _ShapeFitGamePageState();
+}
+class _ShapeFitGamePageState extends State<ShapeFitGamePage> {
+  final _random = Random();
+  late ShapeKind target;
+  late List<ShapeKind> options;
+  ShapeKind? selected;
+  int score = 0;
+  int round = 0;
+  void _next() {
+    target = ShapeKind.values[_random.nextInt(ShapeKind.values.length)];
+    options = <ShapeKind>{target, ...ShapeKind.values.where((s) => s != target).toList()..shuffle(_random).take(3)}.toList()..shuffle(_random);
+    selected = null;
+    round++;
+  }
+  @override void initState() { super.initState(); _next(); }
+  void _place(ShapeKind shape) {
+    if (shape != target) {
+      GameAudio.tap();
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Эта деталь не подходит. Попробуй другую!')));
+      return;
+    }
+    score++;
+    GameAudio.correct();
+    won(context, 'Ты подобрал форму: ${shapeLabel(target)}!', () => setState(_next));
+  }
+  Widget _shapeChoice(ShapeKind shape) {
+    final isSelected = selected == shape;
+    return Draggable<ShapeKind>(
+      data: shape,
+      onDragStarted: () => setState(() => selected = shape),
+      feedback: Material(color: Colors.transparent, child: SizedBox(width: 76, height: 76, child: CustomPaint(painter: _ShapePainter(shape, const Color(0xFFFFB52E))))),
+      childWhenDragging: Opacity(opacity: .3, child: _choiceCard(shape, isSelected)),
+      child: GestureDetector(onTap: () => setState(() => selected = shape), child: _choiceCard(shape, isSelected)),
+    );
+  }
+  Widget _choiceCard(ShapeKind shape, bool isSelected) => Container(
+    width: 66, height: 72,
+    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: isSelected ? const Color(0xFF5476B8) : Colors.white, width: 3)),
+    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      Expanded(child: Padding(padding: const EdgeInsets.all(8), child: CustomPaint(painter: _ShapePainter(shape, const Color(0xFFFFB52E)), child: const SizedBox.expand()))),
+      Text(shapeLabel(shape), style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+    ]),
+  );
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFFEAF7E8),
+    appBar: AppBar(title: const Text('Подбери форму'), backgroundColor: Colors.transparent),
+    body: SafeArea(child: Column(children: [
+      Padding(padding: const EdgeInsets.fromLTRB(18, 8, 18, 10), child: Text('Раунд $round  •  ⭐ $score\nВыбери деталь для персонажа и перетащи её на пустое место', textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold))),
+      Wrap(alignment: WrapAlignment.center, spacing: 8, runSpacing: 8, children: options.map(_shapeChoice).toList()),
+      Expanded(child: Center(child: DragTarget<ShapeKind>(
+        onWillAcceptWithDetails: (_) => true,
+        onAcceptWithDetails: (d) => _place(d.data),
+        builder: (context, candidates, rejected) => GestureDetector(
+          onTap: selected == null ? null : () => _place(selected!),
+          child: SizedBox(width: 300, height: 330, child: CustomPaint(
+            painter: _BearPainter(target, candidates.isNotEmpty),
+            child: const SizedBox.expand(),
+          )),
+        ),
+      ))),
+      const Padding(padding: EdgeInsets.only(bottom: 16), child: Text('Можно перетащить деталь или сначала выбрать её, а затем нажать на пустое место', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Color(0xFF60745F)))),
+    ])),
+  );
+}
+
+class _ShapePainter extends CustomPainter {
+  final ShapeKind shape; final Color color;
+  _ShapePainter(this.shape, this.color);
+  @override void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(size.width*.12, size.height*.12, size.width*.76, size.height*.76);
+    canvas.drawPath(shapePath(shape, rect), Paint()..color=color..style=PaintingStyle.fill);
+    canvas.drawPath(shapePath(shape, rect), Paint()..color=Colors.white..style=PaintingStyle.stroke..strokeWidth=2);
+  }
+  @override bool shouldRepaint(covariant _ShapePainter old) => old.shape != shape || old.color != color;
+}
+
+class _BearPainter extends CustomPainter {
+  final ShapeKind hole; final bool highlighted;
+  _BearPainter(this.hole, this.highlighted);
+  @override void paint(Canvas canvas, Size size) {
+    final scale = size.width / 300;
+    canvas.save(); canvas.scale(scale);
+    final fur = Paint()..color=const Color(0xFFB97B50);
+    final dark = Paint()..color=const Color(0xFF563B32);
+    final cream = Paint()..color=const Color(0xFFFFE2B8);
+    canvas.drawOval(const Rect.fromLTWH(37, 27, 78, 78), fur);
+    canvas.drawOval(const Rect.fromLTWH(185, 27, 78, 78), fur);
+    canvas.drawOval(const Rect.fromLTWH(50, 42, 52, 52), cream);
+    canvas.drawOval(const Rect.fromLTWH(198, 42, 52, 52), cream);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(48, 88, 204, 210), const Radius.circular(92)), fur);
+    canvas.drawOval(const Rect.fromLTWH(72, 110, 156, 150), cream);
+    canvas.drawCircle(const Offset(111, 119), 8, dark);
+    canvas.drawCircle(const Offset(189, 119), 8, dark);
+    canvas.drawOval(const Rect.fromLTWH(132, 139, 36, 25), dark);
+    canvas.drawArc(const Rect.fromLTWH(115, 145, 70, 50), .2, pi-.4, false, Paint()..color=dark.color..style=PaintingStyle.stroke..strokeWidth=5..strokeCap=StrokeCap.round);
+    final holeRect = Rect.fromCenter(center: const Offset(150, 218), width: 76, height: 76);
+    final path = shapePath(hole, holeRect);
+    canvas.drawPath(path, Paint()..color=highlighted ? const Color(0xFFDAF4D8) : const Color(0xFFEAF7E8));
+    canvas.drawPath(path, Paint()..color=const Color(0xFF679A68)..style=PaintingStyle.stroke..strokeWidth=4..strokeCap=StrokeCap.round);
+    for (final leg in [70.0, 180.0]) {
+      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(leg, 265, 48, 32), const Radius.circular(14)), fur);
+    }
+    canvas.restore();
+  }
+  @override bool shouldRepaint(covariant _BearPainter old) => old.hole != hole || old.highlighted != highlighted;
+}
+
+class ColoringGamePage extends StatefulWidget {
+  const ColoringGamePage({super.key});
+  @override State<ColoringGamePage> createState() => _ColoringGamePageState();
+}
+class _ColoringGamePageState extends State<ColoringGamePage> {
+  final colors = <Color>[Colors.red, Colors.orange, Colors.yellow, Colors.green, Colors.blue, Colors.purple, Colors.pink, Colors.brown];
+  final names = <String>['Красный','Оранжевый','Жёлтый','Зелёный','Синий','Фиолетовый','Розовый','Коричневый'];
+  final fills = <int, Color>{};
+  int selectedColor = 0;
+  int selectedPart = 0;
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFFFFF0F4),
+    appBar: AppBar(title: const Text('Раскраска'), backgroundColor: Colors.transparent, actions: [
+      IconButton(onPressed: () => setState(() { fills.clear(); selectedPart=0; }), icon: const Icon(Icons.refresh)),
+    ]),
+    body: SafeArea(child: Column(children: [
+      const Padding(padding: EdgeInsets.all(14), child: Text('Выбери цвет и нажимай на части бабочки', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+      Expanded(child: Center(child: GestureDetector(
+        onTapDown: (d) {
+          final box = context.findRenderObject() as RenderBox?;
+          if (box == null) return;
+          final local = d.localPosition;
+          final size = box.size;
+          final normalizedX = local.dx / size.width;
+          final normalizedY = local.dy / size.height;
+          setState(() => selectedPart = normalizedY < .42 ? (normalizedX < .5 ? 0 : 1) : (normalizedX < .5 ? 2 : 3));
+          GameAudio.tap();
+        },
+        child: CustomPaint(
+          size: const Size(320, 330),
+          painter: _ButterflyPainter(fills),
+        ),
+      ))),
+      Text('Цвет: ${names[selectedColor]}', style: const TextStyle(fontWeight: FontWeight.bold)),
+      Padding(padding: const EdgeInsets.all(14), child: Wrap(
+        alignment: WrapAlignment.center, spacing: 12, runSpacing: 12,
+        children: List.generate(colors.length, (i) => GestureDetector(
+          onTap: () => setState(() { selectedColor=i; fills[selectedPart]=colors[i]; }),
+          child: Container(width: 42, height: 42, decoration: BoxDecoration(color: colors[i], shape: BoxShape.circle, border: Border.all(color: selectedColor==i ? Colors.black : Colors.white, width: 3))),
+        )),
+      )),
+      const Padding(padding: EdgeInsets.only(bottom: 12), child: Text('Нажми на крылышко, чтобы раскрасить его', style: TextStyle(fontSize: 12, color: Colors.black54))),
+    ])),
+  );
+}
+
+class _ButterflyPainter extends CustomPainter {
+  final Map<int, Color> fills;
+  _ButterflyPainter(this.fills);
+  @override void paint(Canvas canvas, Size size) {
+    final sx=size.width/320, sy=size.height/330;
+    canvas.save(); canvas.scale(sx,sy);
+    final outline=Paint()..color=const Color(0xFF493C43)..style=PaintingStyle.stroke..strokeWidth=5;
+    final body=Paint()..color=fills[4] ?? Colors.white..style=PaintingStyle.fill;
+    final leftTop=Rect.fromLTWH(25,55,125,105), rightTop=Rect.fromLTWH(170,55,125,105);
+    final leftBottom=Rect.fromLTWH(38,165,110,115), rightBottom=Rect.fromLTWH(172,165,110,115);
+    final wingRects=[leftTop,rightTop,leftBottom,rightBottom];
+    for(var i=0;i<wingRects.length;i++){
+      final fill=Paint()..color=fills[i] ?? Colors.white;
+      canvas.drawOval(wingRects[i],fill); canvas.drawOval(wingRects[i],outline);
+    }
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(148,90,24,190),const Radius.circular(12)),body);
+    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(148,90,24,190),const Radius.circular(12)),outline);
+    final antenna=Paint()..color=outline.color..style=PaintingStyle.stroke..strokeWidth=5..strokeCap=StrokeCap.round;
+    canvas.drawLine(const Offset(158,95),const Offset(130,38),antenna);
+    canvas.drawLine(const Offset(162,95),const Offset(190,38),antenna);
+    canvas.drawCircle(const Offset(130,38),8,Paint()..color=outline.color);
+    canvas.drawCircle(const Offset(190,38),8,Paint()..color=outline.color);
+    canvas.restore();
+  }
+  @override bool shouldRepaint(covariant _ButterflyPainter old) => old.fills != fills;
+}
