@@ -29,7 +29,6 @@ class _CharacterImageState extends State<CharacterImage> with SingleTickerProvid
   late final AnimationController _motion = AnimationController(vsync:this,duration:const Duration(milliseconds:1900))..repeat(reverse:true);
   @override void dispose(){_motion.dispose();super.dispose();}
   @override Widget build(BuildContext context){
-    final colors=_CharacterPainter.palette[widget.name]??const Color(0xFF5476A8);
     return SizedBox(width:widget.width,height:widget.height,child:AnimatedBuilder(
       animation:_motion,
       builder:(context,child)=>Transform.translate(offset:Offset(0,-4*_motion.value),child:Transform.rotate(angle:(_motion.value-.5)*.035,child:child)),
