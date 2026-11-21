@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(const BabyPuzzleApp());
+void main() {\n  WidgetsFlutterBinding.ensureInitialized();\n  BackgroundMusic.initialize();\n  runApp(const BabyPuzzleApp());\n}
 
 class BabyPuzzleApp extends StatelessWidget {
   const BabyPuzzleApp({super.key});
