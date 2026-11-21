@@ -91,7 +91,43 @@ class _FindGamePageState extends State<FindGamePage>{
  void _next(){options=_deck(9);target=Random().nextInt(options.length);message='Найди такую же картинку!';}
  @override void initState(){super.initState();_next();}
  void _choose(int i){if(i==target){_winSound();setState(()=>score++);showDialog(context:context,builder:(c)=>AlertDialog(title:const Text('Правильно! ⭐',textAlign:TextAlign.center),content:Text('Ты нашёл '+options[target].value,textAlign:TextAlign.center),actions:[FilledButton(onPressed:(){Navigator.pop(c);setState(_next);},child:const Text('Дальше'))]));}else{_tapSound();setState(()=>message='Попробуй ещё раз 🙂');}}
- @override Widget build(BuildContext context)=>Scaffold(backgroundColor:const Color(0xFFFFF0E3),appBar:AppBar(title:const Text('Найди предмет'),backgroundColor:Colors.transparent,actions:[IconButton(onPressed:()=>setState(_next),icon:const Icon(Icons.refresh))]),body:Column(children:[const SizedBox(height:18),Text('⭐ $score',style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Найди картинку:',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),AnimatedSwitcher(duration:const Duration(milliseconds:300),child:Text(options[target].value,key:ValueKey(options[target].key),style:const TextStyle(fontSize:84))),Text(message,style:const TextStyle(fontSize:16)),Expanded(child:GridView.builder(padding:const EdgeInsets.all(18),itemCount:options.length,gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3,crossAxisSpacing:12,mainAxisSpacing:12),itemBuilder:(c,i)=>Material(color:Colors.white,borderRadius:BorderRadius.circular(20),child:InkWell(borderRadius:BorderRadius.circular(20),onTap:()=>_choose(i),child:Center(child:Text(options[i].value,style:const TextStyle(fontSize:48)))))))]));}
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF0E3),
+      appBar: AppBar(
+        title: const Text('Найди предмет'),
+        backgroundColor: Colors.transparent,
+        actions: [IconButton(onPressed: () => setState(_next), icon: const Icon(Icons.refresh))],
+      ),
+      body: Column(children: [
+        const SizedBox(height: 18),
+        Text('⭐ $score', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        const Text('Найди картинку:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: Text(options[target].value, key: ValueKey(options[target].key), style: const TextStyle(fontSize: 84)),
+        ),
+        Text(message, style: const TextStyle(fontSize: 16)),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(18),
+            itemCount: options.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 12),
+            itemBuilder: (context, index) => Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => _choose(index),
+                child: Center(child: Text(options[index].value, style: const TextStyle(fontSize: 48))),
+              ),
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
 }
 
 class ShadowGamePage extends StatefulWidget{const ShadowGamePage({super.key});@override State<ShadowGamePage> createState()=>_ShadowGamePageState();}
@@ -100,5 +136,42 @@ class _ShadowGamePageState extends State<ShadowGamePage>{
  void _next(){options=_deck(3);target=Random().nextInt(3);}
  @override void initState(){super.initState();_next();}
  void _choose(int i){if(i==target){_winSound();setState(()=>score++);showDialog(context:context,builder:(c)=>AlertDialog(title:const Text('Верно! 🌟',textAlign:TextAlign.center),content:const Text('Ты узнал силуэт!',textAlign:TextAlign.center),actions:[FilledButton(onPressed:(){Navigator.pop(c);setState(_next);},child:const Text('Следующий'))]));}else{_tapSound();ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Это другая тень. Попробуй ещё!')));}}
- @override Widget build(BuildContext context)=>Scaffold(backgroundColor:const Color(0xFFE6F5FF),appBar:AppBar(title:const Text('Угадай тень'),backgroundColor:Colors.transparent,actions:[IconButton(onPressed:()=>setState(_next),icon:const Icon(Icons.refresh))]),body:Column(children:[const SizedBox(height:20),Text('⭐ $score',style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Кому принадлежит эта тень?',style:TextStyle(fontSize:19,fontWeight:FontWeight.bold)),const SizedBox(height:30),AnimatedSwitcher(duration:const Duration(milliseconds:300),child:Text(options[target].value,key:ValueKey(options[target].key),style:const TextStyle(fontSize:100,color:Colors.black))),const Text('Выбери правильную картинку',style:TextStyle(fontSize:16)),Expanded(child:GridView.builder(padding:const EdgeInsets.all(18),itemCount:3,gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3,crossAxisSpacing:12,mainAxisSpacing:12),itemBuilder:(c,i)=>Material(color:Colors.white,borderRadius:BorderRadius.circular(20),child:InkWell(borderRadius:BorderRadius.circular(20),onTap:()=>_choose(i),child:Center(child:Text(options[i].value,style:const TextStyle(fontSize:48)))))))]));}
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFE6F5FF),
+      appBar: AppBar(
+        title: const Text('Угадай тень'),
+        backgroundColor: Colors.transparent,
+        actions: [IconButton(onPressed: () => setState(_next), icon: const Icon(Icons.refresh))],
+      ),
+      body: Column(children: [
+        const SizedBox(height: 20),
+        Text('⭐ $score', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        const Text('Кому принадлежит эта тень?', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 30),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: Text(options[target].value, key: ValueKey(options[target].key), style: const TextStyle(fontSize: 100, color: Colors.black)),
+        ),
+        const Text('Выбери правильную картинку', style: TextStyle(fontSize: 16)),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(18),
+            itemCount: options.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 12),
+            itemBuilder: (context, index) => Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => _choose(index),
+                child: Center(child: Text(options[index].value, style: const TextStyle(fontSize: 48))),
+              ),
+            ),
+          ),
+        ),
+      ]),
+    );
+  }
 }
