@@ -42,6 +42,9 @@ jobs:
         continue-on-error: true
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
+      - name: Verify generated sound assets
+        run: test -s assets/audio/tap.wav && test -s assets/audio/correct.wav && test -s assets/audio/win.wav
+
       - name: Build APK
         run: flutter build apk --release
 
