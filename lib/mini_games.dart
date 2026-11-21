@@ -5,6 +5,61 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'character_assets.dart';
 
+
+class BackgroundMusic {
+  static final AudioPlayer _player = AudioPlayer();
+  static final ValueNotifier<bool> enabled = ValueNotifier<bool>(true);
+  static bool _ready = false;
+  static Future<void> initialize() async {
+    final prefs = await SharedPreferences.getInstance();
+    enabled.value = prefs.getBool('background_music_enabled') ?? true;
+    await _player.setReleaseMode(ReleaseMode.loop);
+    await _player.setVolume(0.16);
+    _ready = true;
+    if (enabled.value) await _start();
+  }
+  static Future<void> _start() async {
+    if (!_ready || !enabled.value) return;
+    try {
+      await _player.stop();
+      await _player.play(AssetSource('audio/background.wav'));
+    } catch (_) {}
+  }
+  static Future<void> toggle() async {
+    enabled.value = !enabled.value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('background_music_enabled', enabled.value);
+    if (enabled.value) {
+      await _start();
+    } else {
+      await _player.stop();
+    }
+  }
+  static Future<void> dispose() async => _player.dispose();
+}
+
+class MusicToggle extends StatelessWidget {
+  const MusicToggle({super.key});
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
+    valueListenable: BackgroundMusic.enabled,
+    builder: (context, on, _) => Material(
+      color: Colors.white.withOpacity(.94),
+      shape: const CircleBorder(),
+      elevation: 5,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: BackgroundMusic.toggle,
+        child: SizedBox(
+          width: 48, height: 48,
+          child: Icon(on ? Icons.music_note_rounded : Icons.music_off_rounded,
+            color: on ? const Color(0xFF4268A8) : const Color(0xFF8993A4), size: 25),
+        ),
+      ),
+    ),
+  );
+}
+
 class GameAudio {
  static final AudioPlayer _p=AudioPlayer();
  static Future<void> tap() async {HapticFeedback.selectionClick();await _play('tap.wav');}
