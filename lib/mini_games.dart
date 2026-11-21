@@ -571,7 +571,7 @@ class _HeroPainter extends CustomPainter {
   _HeroPainter(this.hero,this.color,this.hole,this.holeCenter,this.placed,this.highlighted);
   @override void paint(Canvas canvas,Size size){
     canvas.save();canvas.scale(size.width/320,size.height/370);
-    final fur=Paint()..color=color;final cream=Paint()..color=const Color(0xFFFFE6BD);final dark=Paint()..color=const Color(0xFF49332F);
+    final fur=Paint()..shader=LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color.lerp(color,Colors.white,.30)!,color,Color.lerp(color,Colors.black,.12)!]).createShader(const Rect.fromLTWH(30,8,260,340));final cream=Paint()..shader=const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xFFFFF0D2),Color(0xFFFFDFAE)]).createShader(const Rect.fromLTWH(70,110,180,190));final dark=Paint()..color=const Color(0xFF49332F);
     canvas.drawOval(const Rect.fromLTWH(54,328,212,20),Paint()..color=color.withOpacity(.12));
     if(hero==1){
       canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(76,8,55,132),const Radius.circular(28)),fur);canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(189,8,55,132),const Radius.circular(28)),fur);
@@ -584,7 +584,7 @@ class _HeroPainter extends CustomPainter {
     }
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(47,84,226,244),const Radius.circular(104)),fur);
     canvas.drawOval(const Rect.fromLTWH(78,116,164,174),cream);
-    canvas.drawCircle(const Offset(120,158),8,dark);canvas.drawCircle(const Offset(200,158),8,dark);canvas.drawOval(const Rect.fromLTWH(137,179,46,30),dark);
+    canvas.drawCircle(const Offset(120,158),8,dark);canvas.drawCircle(const Offset(200,158),8,dark);canvas.drawCircle(const Offset(122,155),2.8,Paint()..color=Colors.white);canvas.drawCircle(const Offset(202,155),2.8,Paint()..color=Colors.white);canvas.drawCircle(const Offset(94,190),11,Paint()..color=const Color(0xFFFF9B9B).withOpacity(.48));canvas.drawCircle(const Offset(226,190),11,Paint()..color=const Color(0xFFFF9B9B).withOpacity(.48));canvas.drawOval(const Rect.fromLTWH(137,179,46,30),dark);
     canvas.drawArc(const Rect.fromLTWH(121,184,78,56),.15,pi-.3,false,Paint()..color=dark.color..style=PaintingStyle.stroke..strokeWidth=5..strokeCap=StrokeCap.round);
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(12,210,66,32),const Radius.circular(16)),fur);canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(242,210,66,32),const Radius.circular(16)),fur);
     canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(76,310,70,35),const Radius.circular(16)),fur);canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(174,310,70,35),const Radius.circular(16)),fur);
