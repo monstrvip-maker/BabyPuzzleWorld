@@ -1,4 +1,6 @@
 import 'character_assets.dart';
+import 'mini_games.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -111,6 +113,7 @@ class _HomePageState extends State<HomePage> {
         const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Мир открытий!',style:TextStyle(fontSize:23,color:Colors.white,fontWeight:FontWeight.w900)),SizedBox(height:5),Text('Весёлые пазлы без интернета',style:TextStyle(color:Colors.white,fontSize:15))])),
         CharacterImage('dino', width:104, height:104)
       ]))),
+      const SliverToBoxAdapter(child: MiniGamesSection()),
       SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.symmetric(horizontal:18,vertical:4),child:Text('Выбери мир',style:TextStyle(fontSize:21,fontWeight:FontWeight.w900,color:Color(0xFF243B68))))),
       SliverPadding(padding:const EdgeInsets.all(14),sliver:SliverGrid(delegate:SliverChildBuilderDelegate((c,i){
         final cat=cats[i+1]; final list=items.where((e)=>e.category==cat).toList(); final item=list.first;
@@ -169,10 +172,14 @@ class _PuzzlePageState extends State<PuzzlePage> {
       won = slots.every((v) => v != null) &&
           List.generate(n * n, (i) => slots[i] == i).every((v) => v);
     });
-    if (won) _finish();
+    SystemSound.play(won ? SystemSoundType.alert : SystemSoundType.click);
+    HapticFeedback.selectionClick();
+    if (won) { HapticFeedback.heavyImpact(); _finish(); }
   }
 
   Future<void> _finish() async {
+    SystemSound.play(SystemSoundType.alert);
+    HapticFeedback.mediumImpact();
     await widget.onWin(widget.item.asset);
     if (!mounted) return;
     showDialog<void>(
