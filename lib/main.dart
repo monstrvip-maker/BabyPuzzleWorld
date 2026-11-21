@@ -42,11 +42,17 @@ class PuzzlePieceGraphic extends StatelessWidget {
       width: size,
       height: size,
       child: ClipRect(
-        child: Align(
-          alignment: Alignment(x == 0 ? -1 : 1, y == 0 ? -1 : 1),
-          widthFactor: .5,
-          heightFactor: .5,
-          child: CharacterImage(asset, width: size * 2, height: size * 2),
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            Positioned(
+              left: x == 0 ? 0 : -size,
+              top: y == 0 ? 0 : -size,
+              width: size * 2,
+              height: size * 2,
+              child: CharacterImage(asset, width: size * 2, height: size * 2),
+            ),
+          ],
         ),
       ),
     );
