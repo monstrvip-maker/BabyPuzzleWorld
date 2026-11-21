@@ -28,7 +28,7 @@ class CharacterImage extends StatelessWidget {
     'submarine': Icons.directions_boat, 'turtle': Icons.pets,
     'firetruck': Icons.local_fire_department, 'bus': Icons.directions_bus,
     'puppy': Icons.pets, 'kitten': Icons.pets, 'elephant': Icons.pets,
-    'lion': Icons.pets, 'apple': Icons.apple, 'banana': Icons.eco,
+    'lion': Icons.pets, 'apple': Icons.eco, 'banana': Icons.eco,
     'butterfly': Icons.local_florist, 'rocket': Icons.rocket_launch,
   };
   static const Map<String, Color> _colors = {
