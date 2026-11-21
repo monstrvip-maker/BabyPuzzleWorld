@@ -21,22 +21,33 @@ class CharacterImage extends StatelessWidget {
   final double? width, height;
   final BoxFit fit;
   const CharacterImage(this.name, {super.key, this.width, this.height, this.fit=BoxFit.contain});
+
+  static const Map<String, IconData> _icons = {
+    'dino': Icons.pets, 'triceratops': Icons.pets,
+    'whale': Icons.water, 'octopus': Icons.waves,
+    'submarine': Icons.directions_boat, 'turtle': Icons.pets,
+    'firetruck': Icons.local_fire_department, 'bus': Icons.directions_bus,
+    'puppy': Icons.pets, 'kitten': Icons.pets, 'elephant': Icons.pets,
+    'lion': Icons.pets, 'apple': Icons.apple, 'banana': Icons.eco,
+    'butterfly': Icons.local_florist, 'rocket': Icons.rocket_launch,
+  };
+  static const Map<String, Color> _colors = {
+    'dino': Color(0xFF35A853), 'triceratops': Color(0xFFE45B43),
+    'whale': Color(0xFF258ED1), 'octopus': Color(0xFF9B59B6),
+    'submarine': Color(0xFFE5B323), 'turtle': Color(0xFF4AAB55),
+    'firetruck': Color(0xFFE44736), 'bus': Color(0xFFF1B91C),
+    'puppy': Color(0xFFB9784F), 'kitten': Color(0xFFE69B36),
+    'elephant': Color(0xFF8496A8), 'lion': Color(0xFFC88A24),
+    'apple': Color(0xFFE43C35), 'banana': Color(0xFFE9C52E),
+    'butterfly': Color(0xFFDD8731), 'rocket': Color(0xFF3489C9),
+  };
   @override
   Widget build(BuildContext context) => SizedBox(
-    width: width,
-    height: height,
-    child: Center(
-      child: FittedBox(
-        fit: fit,
-        alignment: Alignment.center,
-        child: Text(
-          characterAssets[name] ?? '🧩',
-          maxLines: 1,
-          softWrap: false,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 250, height: 1.0),
-        ),
-      ),
+    width: width, height: height,
+    child: FittedBox(
+      fit: fit,
+      child: Icon(_icons[name] ?? Icons.extension,
+        size: 220, color: _colors[name] ?? const Color(0xFF5476A8)),
     ),
   );
 }
@@ -113,7 +124,7 @@ class _HomePageState extends State<HomePage> {
         const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Мир открытий!',style:TextStyle(fontSize:23,color:Colors.white,fontWeight:FontWeight.w900)),SizedBox(height:5),Text('Весёлые пазлы без интернета',style:TextStyle(color:Colors.white,fontSize:15))])),
         CharacterImage('dino', width:104, height:104)
       ]))),
-      const SliverToBoxAdapter(child: MiniGamesSection()),
+      SliverToBoxAdapter(child: MiniGamesSection(onReturn: _load)),
       SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.symmetric(horizontal:18,vertical:4),child:Text('Выбери мир',style:TextStyle(fontSize:21,fontWeight:FontWeight.w900,color:Color(0xFF243B68))))),
       SliverPadding(padding:const EdgeInsets.all(14),sliver:SliverGrid(delegate:SliverChildBuilderDelegate((c,i){
         final cat=cats[i+1]; final list=items.where((e)=>e.category==cat).toList(); final item=list.first;
