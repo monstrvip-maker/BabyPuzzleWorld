@@ -553,8 +553,7 @@ class _ShapeFitGamePageState extends State<ShapeFitGamePage> {
         builder:(context,candidates,rejected)=>GestureDetector(
           onTap:selected==null||placed?null:()=>putShape(selected!),
           child:AnimatedScale(scale:candidates.isNotEmpty?1.035:1,duration:const Duration(milliseconds:180),
-            child:SizedBox(width:320,height:370,child:CustomPaint(
-              painter:_HeroPainter(hero,heroColor,target,holeSpots[holeIndex],placed,candidates.isNotEmpty),child:const SizedBox.expand()))),
+            child:SizedBox(width:320,height:370,child:AnimatedSwitcher(duration:const Duration(milliseconds:420),transitionBuilder:(child,animation)=>FadeTransition(opacity:animation,child:ScaleTransition(scale:Tween<double>(begin:.86,end:1).animate(CurvedAnimation(parent:animation,curve:Curves.easeOutBack)),child:child)),child:CustomPaint(key:ValueKey('hero-$hero-round-$round'),painter:_HeroPainter(hero,heroColor,target,holeSpots[holeIndex],placed,candidates.isNotEmpty),child:const SizedBox.expand())))),
         ),
       ))),
       const Padding(padding:EdgeInsets.fromLTRB(16,0,16,14),child:Text('Перетащи фигурку на пустое место или выбери её и коснись героя 👆',textAlign:TextAlign.center,style:TextStyle(color:Color(0xFF766A61),fontSize:12))),
