@@ -5,7 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {\n  WidgetsFlutterBinding.ensureInitialized();\n  BackgroundMusic.initialize();\n  runApp(const BabyPuzzleApp());\n}
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  BackgroundMusic.initialize();
+  runApp(const BabyPuzzleApp());
+}
 
 class BabyPuzzleApp extends StatelessWidget {
   const BabyPuzzleApp({super.key});
@@ -14,6 +18,17 @@ class BabyPuzzleApp extends StatelessWidget {
     debugShowCheckedModeBanner: false, title: 'Baby Puzzle World',
     theme: ThemeData(useMaterial3: true, fontFamily: 'Roboto', colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3478E8))),
     home: const HomePage(),
+    builder: (context, child) => Stack(
+      fit: StackFit.expand,
+      children: [
+        child ?? const SizedBox.shrink(),
+        const Positioned(
+          right: 14,
+          bottom: 18,
+          child: SafeArea(child: MusicToggle()),
+        ),
+      ],
+    ),
   );
 }
 
