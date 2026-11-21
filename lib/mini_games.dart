@@ -1,177 +1,58 @@
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'character_assets.dart';
 
-void _tapSound(){SystemSound.play(SystemSoundType.click);HapticFeedback.selectionClick();}
-void _winSound(){SystemSound.play(SystemSoundType.alert);HapticFeedback.mediumImpact();}
-
+class GameAudio {
+ static final AudioPlayer _p=AudioPlayer();
+ static Future<void> tap() async {HapticFeedback.selectionClick();await _play('tap.wav');}
+ static Future<void> correct() async {HapticFeedback.lightImpact();await _play('correct.wav');}
+ static Future<void> win() async {HapticFeedback.mediumImpact();await _play('win.wav');}
+ static Future<void> _play(String f) async {try{await _p.stop();await _p.play(AssetSource('audio/'+f));}catch(_){}}
+}
 class MiniGamesSection extends StatelessWidget {
  const MiniGamesSection({super.key});
  @override Widget build(BuildContext context){
-  final games=<_GameCard>[
-   _GameCard('Найди пару','🧠','Тренируй память',const Color(0xFFE9E2FF),const MemoryGamePage()),
-   _GameCard('Найди предмет','🔎','Ищи нужную картинку',const Color(0xFFFFE8D7),const FindGamePage()),
-   _GameCard('Угадай тень','🌙','Узнай силуэт',const Color(0xFFDFF2FF),const ShadowGamePage()),
-  ];
-  return Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-   const Padding(padding:EdgeInsets.fromLTRB(18,12,18,10),child:Text('Другие игры',style:TextStyle(fontSize:21,fontWeight:FontWeight.w900,color:Color(0xFF243B68)))),
-   SizedBox(height:150,child:ListView.separated(padding:const EdgeInsets.symmetric(horizontal:14),scrollDirection:Axis.horizontal,itemCount:games.length,separatorBuilder:(_,__)=>const SizedBox(width:12),itemBuilder:(c,i){
-    final g=games[i];return SizedBox(width:190,child:Material(color:g.color,borderRadius:BorderRadius.circular(22),child:InkWell(borderRadius:BorderRadius.circular(22),onTap:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>g.page)),child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(g.emoji,style:const TextStyle(fontSize:34)),const Spacer(),Text(g.title,style:const TextStyle(fontSize:17,fontWeight:FontWeight.w900,color:Color(0xFF293B5E))),Text(g.subtitle,style:const TextStyle(fontSize:12,color:Color(0xFF52627D)))])))));
-   })),
-  ]);
+ final games=<List<dynamic>>[
+ ['Найди пару','🧠','Тренируй память',Color(0xFFE9E2FF),MemoryGamePage()],
+ ['Найди предмет','🔎','Ищи нужную картинку',Color(0xFFFFE8D7),FindGamePage()],
+ ['Угадай тень','🌙','Узнай силуэт',Color(0xFFDFF2FF),ShadowGamePage()],
+ ['Сосчитай','🔢','Сколько предметов?',Color(0xFFE2F5E7),CountGamePage()],
+ ['Найди цвет','🎨','Выбери нужный цвет',Color(0xFFFFE6EE),ColorGamePage()],
+ ['Что лишнее?','🧩','Найди непохожее',Color(0xFFFFF2C9),OddGamePage()],
+ ['Повтори ряд','🔶','Продолжи узор',Color(0xFFE3EEFF),SequenceGamePage()],
+ ];
+ return Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+ const Padding(padding:EdgeInsets.fromLTRB(18,12,18,10),child:Text('Другие игры',style:TextStyle(fontSize:21,fontWeight:FontWeight.w900,color:Color(0xFF243B68)))),
+ SizedBox(height:154,child:ListView.separated(padding:const EdgeInsets.symmetric(horizontal:14),scrollDirection:Axis.horizontal,itemCount:games.length,separatorBuilder:(_,__)=>const SizedBox(width:12),itemBuilder:(c,i){final g=games[i];return SizedBox(width:185,child:Material(color:g[3] as Color,borderRadius:BorderRadius.circular(22),child:InkWell(borderRadius:BorderRadius.circular(22),onTap:(){GameAudio.tap();Navigator.push(context,MaterialPageRoute(builder:(_)=>g[4] as Widget));},child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(g[1] as String,style:const TextStyle(fontSize:34)),const Spacer(),Text(g[0] as String,style:const TextStyle(fontSize:17,fontWeight:FontWeight.w900,color:Color(0xFF293B5E))),Text(g[2] as String,style:const TextStyle(fontSize:12,color:Color(0xFF52627D)))])))));}))
+ ]);
  }
 }
-class _GameCard{final String title,emoji,subtitle;final Color color;final Widget page;const _GameCard(this.title,this.emoji,this.subtitle,this.color,this.page);}
-List<MapEntry<String,String>> _deck([int count=8]){final all=characterAssets.entries.toList()..shuffle();return all.take(count).toList();}
+List<MapEntry<String,String>> deck([int n=8]){final a=characterAssets.entries.toList()..shuffle();return a.take(min(n,a.length)).toList();}
+class GameShell extends StatelessWidget{final String title;final Color color;final Widget child;const GameShell(this.title,this.color,this.child,{super.key});@override Widget build(BuildContext c)=>Scaffold(backgroundColor:color,appBar:AppBar(title:Text(title),backgroundColor:Colors.transparent),body:SafeArea(child:child));}
+void won(BuildContext c,String text,VoidCallback next){GameAudio.win();showDialog<void>(context:c,builder:(d)=>AlertDialog(title:const Text('Ура! 🎉',textAlign:TextAlign.center),content:Text(text,textAlign:TextAlign.center),actions:[FilledButton(onPressed:(){Navigator.pop(d);next();},child:const Text('Дальше'))]));}
+Widget tile(String e,VoidCallback tap,{double size=48})=>Material(color:Colors.white,borderRadius:BorderRadius.circular(20),child:InkWell(borderRadius:BorderRadius.circular(20),onTap:tap,child:Center(child:Text(e,style:TextStyle(fontSize:size)))));
 
-class MemoryGamePage extends StatefulWidget{const MemoryGamePage({super.key});@override State<MemoryGamePage> createState()=>_MemoryGamePageState();}
-class _MemoryGamePageState extends State<MemoryGamePage>{
- late List<MapEntry<String,String>> cards;late List<int> order;final Set<int> opened={};final Set<int> matched={};int moves=0;bool locked=false;
- @override void initState(){super.initState();_reset();}
- void _reset(){cards=_deck(6);order=[...List.generate(6,(i)=>i),...List.generate(6,(i)=>i)]..shuffle();opened.clear();matched.clear();moves=0;locked=false;}
- Future<void> _flip(int i)async{
-  if(locked||matched.contains(i)||opened.contains(i))return;_tapSound();setState(()=>opened.add(i));
-  if(opened.length==2){moves++;final pair=opened.toList();if(order[pair[0]]==order[pair[1]]){await Future.delayed(const Duration(milliseconds:300));if(!mounted)return;setState((){matched.addAll(pair);opened.clear();});_winSound();if(matched.length==order.length)_complete();}else{locked=true;await Future.delayed(const Duration(milliseconds:800));if(!mounted)return;setState((){opened.clear();locked=false;});}}
- }
- void _complete(){showDialog(context:context,builder:(c)=>AlertDialog(title:const Text('Умница! 🎉',textAlign:TextAlign.center),content:Text('Все пары найдены! Ходов: $moves',textAlign:TextAlign.center),actions:[TextButton(onPressed:(){Navigator.pop(c);setState(_reset);},child:const Text('Ещё раз')),FilledButton(onPressed:(){Navigator.pop(c);Navigator.pop(context);},child:const Text('Готово'))]));}
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF2ECFF),
-      appBar: AppBar(
-        title: const Text('Найди пару'),
-        backgroundColor: Colors.transparent,
-        actions: [IconButton(onPressed: () => setState(_reset), icon: const Icon(Icons.refresh))],
-      ),
-      body: Column(children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text('Открой две одинаковые картинки • Ходы: $moves', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(14),
-            itemCount: order.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 12),
-            itemBuilder: (context, index) {
-              final visible = opened.contains(index) || matched.contains(index);
-              return GestureDetector(
-                onTap: () => _flip(index),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  decoration: BoxDecoration(
-                    color: visible ? Colors.white : const Color(0xFF8B79D9),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(.08), blurRadius: 8, offset: const Offset(0, 4))],
-                  ),
-                  child: Center(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 180),
-                      child: Text(
-                        visible ? cards[order[index]].value : '❔',
-                        key: ValueKey(visible ? order[index].toString() : 'back$index'),
-                        style: const TextStyle(fontSize: 48),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ]),
-    );
-  }
-}
+class MemoryGamePage extends StatefulWidget{const MemoryGamePage({super.key});@override State<MemoryGamePage> createState()=>_MemoryState();}
+class _MemoryState extends State<MemoryGamePage>{late List<MapEntry<String,String>> cards;late List<int> ids;final opened=<int>{};final matched=<int>{};int moves=0;bool lock=false;void reset(){cards=deck(6);ids=[...List.generate(6,(i)=>i),...List.generate(6,(i)=>i)]..shuffle();opened.clear();matched.clear();moves=0;lock=false;}@override void initState(){super.initState();reset();}
+Future<void> flip(int i)async{if(lock||opened.contains(i)||matched.contains(i))return;GameAudio.tap();setState(()=>opened.add(i));if(opened.length==2){moves++;final p=opened.toList();if(ids[p[0]]==ids[p[1]]){await Future.delayed(const Duration(milliseconds:250));if(!mounted)return;setState((){matched.addAll(p);opened.clear();});GameAudio.correct();if(matched.length==ids.length)won(context,'Все пары найдены! Ходов: '+moves.toString(),()=>setState(reset));}else{lock=true;await Future.delayed(const Duration(milliseconds:700));if(mounted)setState((){opened.clear();lock=false;});}}}
+@override Widget build(BuildContext c)=>GameShell('Найди пару',const Color(0xFFF2ECFF),Column(children:[Padding(padding:const EdgeInsets.all(16),child:Text('Открой одинаковые картинки • Ходы: '+moves.toString(),style:const TextStyle(fontWeight:FontWeight.bold,fontSize:17))),Expanded(child:GridView.builder(padding:const EdgeInsets.all(14),itemCount:ids.length,gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3,crossAxisSpacing:12,mainAxisSpacing:12),itemBuilder:(c,i){final v=opened.contains(i)||matched.contains(i);return GestureDetector(onTap:()=>flip(i),child:AnimatedScale(scale:matched.contains(i)?.94:1,duration:const Duration(milliseconds:220),child:AnimatedContainer(duration:const Duration(milliseconds:220),decoration:BoxDecoration(color:v?Colors.white:const Color(0xFF8B79D9),borderRadius:BorderRadius.circular(20)),child:Center(child:AnimatedSwitcher(duration:const Duration(milliseconds:180),child:Text(v?cards[ids[i]].value:'❔',key:ValueKey(v?ids[i]:'b'+i.toString()),style:const TextStyle(fontSize:48))))));}))]));}
 
-class FindGamePage extends StatefulWidget{const FindGamePage({super.key});@override State<FindGamePage> createState()=>_FindGamePageState();}
-class _FindGamePageState extends State<FindGamePage>{
- late List<MapEntry<String,String>> options;late int target;int score=0;String message='Найди такую же картинку!';
- void _next(){options=_deck(9);target=Random().nextInt(options.length);message='Найди такую же картинку!';}
- @override void initState(){super.initState();_next();}
- void _choose(int i){if(i==target){_winSound();setState(()=>score++);showDialog(context:context,builder:(c)=>AlertDialog(title:const Text('Правильно! ⭐',textAlign:TextAlign.center),content:Text('Ты нашёл '+options[target].value,textAlign:TextAlign.center),actions:[FilledButton(onPressed:(){Navigator.pop(c);setState(_next);},child:const Text('Дальше'))]));}else{_tapSound();setState(()=>message='Попробуй ещё раз 🙂');}}
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFF0E3),
-      appBar: AppBar(
-        title: const Text('Найди предмет'),
-        backgroundColor: Colors.transparent,
-        actions: [IconButton(onPressed: () => setState(_next), icon: const Icon(Icons.refresh))],
-      ),
-      body: Column(children: [
-        const SizedBox(height: 18),
-        Text('⭐ $score', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-        const Text('Найди картинку:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Text(options[target].value, key: ValueKey(options[target].key), style: const TextStyle(fontSize: 84)),
-        ),
-        Text(message, style: const TextStyle(fontSize: 16)),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(18),
-            itemCount: options.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 12),
-            itemBuilder: (context, index) => Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: () => _choose(index),
-                child: Center(child: Text(options[index].value, style: const TextStyle(fontSize: 48))),
-              ),
-            ),
-          ),
-        ),
-      ]),
-    );
-  }
-}
+class FindGamePage extends StatefulWidget{const FindGamePage({super.key});@override State<FindGamePage> createState()=>_FindState();}
+class _FindState extends State<FindGamePage>{late List<MapEntry<String,String>> opts;late int target;int score=0;void next(){opts=deck(9);target=Random().nextInt(opts.length);}@override void initState(){super.initState();next();}void choose(int i){if(i==target){score++;won(context,'Правильно! Ты нашёл нужную картинку.',()=>setState(next));}else{GameAudio.tap();ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Попробуй ещё раз 🙂')));}}@override Widget build(BuildContext c)=>GameShell('Найди предмет',const Color(0xFFFFF0E3),Column(children:[const SizedBox(height:16),Text('⭐ '+score.toString(),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Найди такую же картинку',style:TextStyle(fontSize:19,fontWeight:FontWeight.bold)),AnimatedSwitcher(duration:const Duration(milliseconds:250),child:Text(opts[target].value,key:ValueKey(opts[target].key),style:const TextStyle(fontSize:88))),Expanded(child:GridView.builder(padding:const EdgeInsets.all(18),itemCount:opts.length,gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3,crossAxisSpacing:12,mainAxisSpacing:12),itemBuilder:(c,i)=>tile(opts[i].value,()=>choose(i))))]));}
 
-class ShadowGamePage extends StatefulWidget{const ShadowGamePage({super.key});@override State<ShadowGamePage> createState()=>_ShadowGamePageState();}
-class _ShadowGamePageState extends State<ShadowGamePage>{
- late List<MapEntry<String,String>> options;late int target;int score=0;
- void _next(){options=_deck(3);target=Random().nextInt(3);}
- @override void initState(){super.initState();_next();}
- void _choose(int i){if(i==target){_winSound();setState(()=>score++);showDialog(context:context,builder:(c)=>AlertDialog(title:const Text('Верно! 🌟',textAlign:TextAlign.center),content:const Text('Ты узнал силуэт!',textAlign:TextAlign.center),actions:[FilledButton(onPressed:(){Navigator.pop(c);setState(_next);},child:const Text('Следующий'))]));}else{_tapSound();ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Это другая тень. Попробуй ещё!')));}}
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFE6F5FF),
-      appBar: AppBar(
-        title: const Text('Угадай тень'),
-        backgroundColor: Colors.transparent,
-        actions: [IconButton(onPressed: () => setState(_next), icon: const Icon(Icons.refresh))],
-      ),
-      body: Column(children: [
-        const SizedBox(height: 20),
-        Text('⭐ $score', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-        const Text('Кому принадлежит эта тень?', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 30),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Text(options[target].value, key: ValueKey(options[target].key), style: const TextStyle(fontSize: 100, color: Colors.black)),
-        ),
-        const Text('Выбери правильную картинку', style: TextStyle(fontSize: 16)),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(18),
-            itemCount: options.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 12),
-            itemBuilder: (context, index) => Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: () => _choose(index),
-                child: Center(child: Text(options[index].value, style: const TextStyle(fontSize: 48))),
-              ),
-            ),
-          ),
-        ),
-      ]),
-    );
-  }
-}
+class ShadowGamePage extends StatefulWidget{const ShadowGamePage({super.key});@override State<ShadowGamePage> createState()=>_ShadowState();}
+class _ShadowState extends State<ShadowGamePage>{late List<MapEntry<String,String>> opts;late int target;int score=0;void next(){opts=deck(3);target=Random().nextInt(3);}@override void initState(){super.initState();next();}void choose(int i){if(i==target){score++;won(context,'Ты узнал картинку!',()=>setState(next));}else{GameAudio.tap();ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Попробуй ещё!')));}}@override Widget build(BuildContext c)=>GameShell('Угадай тень',const Color(0xFFE6F5FF),Column(children:[const SizedBox(height:20),Text('⭐ '+score.toString(),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Кому принадлежит силуэт?',style:TextStyle(fontSize:19,fontWeight:FontWeight.bold)),const SizedBox(height:25),AnimatedSwitcher(duration:const Duration(milliseconds:300),child:Text(opts[target].value,key:ValueKey(opts[target].key),style:const TextStyle(fontSize:100))),Expanded(child:GridView.builder(padding:const EdgeInsets.all(18),itemCount:opts.length,gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3,crossAxisSpacing:12,mainAxisSpacing:12),itemBuilder:(c,i)=>tile(opts[i].value,()=>choose(i))))]));}
+
+class CountGamePage extends StatefulWidget{const CountGamePage({super.key});@override State<CountGamePage> createState()=>_CountState();}
+class _CountState extends State<CountGamePage>{late String emoji;late int count;late List<int> choices;int score=0;void next(){emoji=deck(6).first.value;count=Random().nextInt(5)+1;choices=({count,max(1,count-1),count+1,Random().nextInt(5)+1}).toList()..shuffle();}@override void initState(){super.initState();next();}void choose(int n){if(n==count){score++;won(context,'Верно! Здесь '+count.toString()+' предметов.',()=>setState(next));}else{GameAudio.tap();ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Давай пересчитаем!')));}}@override Widget build(BuildContext c)=>GameShell('Сосчитай',const Color(0xFFE8F7E9),Column(children:[const SizedBox(height:20),Text('⭐ '+score.toString(),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Сколько предметов?',style:TextStyle(fontSize:22,fontWeight:FontWeight.bold)),Expanded(child:Center(child:Wrap(alignment:WrapAlignment.center,spacing:12,runSpacing:12,children:List.generate(count,(i)=>Text(emoji,style:const TextStyle(fontSize:58)))))),Wrap(spacing:12,children:choices.map((v)=>FilledButton(onPressed:()=>choose(v),child:Text(v.toString(),style:const TextStyle(fontSize:24)))).toList()),const SizedBox(height:40)]));}
+
+class ColorGamePage extends StatefulWidget{const ColorGamePage({super.key});@override State<ColorGamePage> createState()=>_ColorState();}
+class _ColorState extends State<ColorGamePage>{final colors=<Color>[Colors.red,Colors.blue,Colors.green,Colors.orange,Colors.purple];final names=<String>['красный','синий','зелёный','оранжевый','фиолетовый'];late int target;int score=0;void next()=>target=Random().nextInt(colors.length);@override void initState(){super.initState();next();}void choose(int i){if(i==target){score++;won(context,'Правильно! Это '+names[target]+' цвет.',()=>setState(next));}else{GameAudio.tap();}}@override Widget build(BuildContext c)=>GameShell('Найди цвет',const Color(0xFFFFEAF0),Column(children:[const SizedBox(height:24),Text('⭐ '+score.toString(),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Найди такой же цвет',style:TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const SizedBox(height:18),AnimatedContainer(duration:const Duration(milliseconds:350),width:150,height:150,decoration:BoxDecoration(color:colors[target],shape:BoxShape.circle)),const Spacer(),Wrap(spacing:16,runSpacing:16,children:List.generate(colors.length,(i)=>InkWell(onTap:()=>choose(i),child:Container(width:82,height:82,decoration:BoxDecoration(color:colors[i],borderRadius:BorderRadius.circular(22),border:Border.all(color:Colors.white,width:4)))))),const SizedBox(height:60)]));}
+
+class OddGamePage extends StatefulWidget{const OddGamePage({super.key});@override State<OddGamePage> createState()=>_OddState();}
+class _OddState extends State<OddGamePage>{late List<MapEntry<String,String>> opts;late int odd;int score=0;void next(){final d=deck(6);final same=d.take(3).toList();final different=d[3];opts=[...same,different]..shuffle();odd=opts.indexWhere((e)=>e.key==different.key);}@override void initState(){super.initState();next();}void choose(int i){if(i==odd){score++;won(context,'Верно! Эта картинка отличается.',()=>setState(next));}else{GameAudio.tap();}}@override Widget build(BuildContext c)=>GameShell('Что лишнее?',const Color(0xFFFFF4D8),Column(children:[const SizedBox(height:20),Text('⭐ '+score.toString(),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Найди непохожую картинку',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),Expanded(child:GridView.builder(padding:const EdgeInsets.all(18),itemCount:4,gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,crossAxisSpacing:14,mainAxisSpacing:14),itemBuilder:(c,i)=>tile(opts[i].value,()=>choose(i),size:62)))]));}
+
+class SequenceGamePage extends StatefulWidget{const SequenceGamePage({super.key});@override State<SequenceGamePage> createState()=>_SequenceState();}
+class _SequenceState extends State<SequenceGamePage>{final patterns=<List<String>>[['🔴','🔵','🔴','🔵'],['⭐','🌙','⭐','🌙'],['🍎','🍌','🍎','🍌'],['🐱','🐶','🐱','🐶']];late List<String> row;late String answer;int score=0;void next(){final p=patterns[Random().nextInt(patterns.length)];row=p.take(3).toList();answer=p[3];}@override void initState(){super.initState();next();}void choose(String s){if(s==answer){score++;won(context,'Отлично! Ты продолжил узор.',()=>setState(next));}else{GameAudio.tap();}}@override Widget build(BuildContext c)=>GameShell('Повтори ряд',const Color(0xFFEAF0FF),Column(children:[const SizedBox(height:24),Text('⭐ '+score.toString(),style:const TextStyle(fontSize:22,fontWeight:FontWeight.bold)),const Text('Что должно быть дальше?',style:TextStyle(fontSize:21,fontWeight:FontWeight.bold)),const SizedBox(height:50),Row(mainAxisAlignment:MainAxisAlignment.spaceEvenly,children:[...row.map((e)=>Text(e,style:const TextStyle(fontSize:54))),const Text('❓',style:TextStyle(fontSize:54))]),const Spacer(),Wrap(spacing:24,children:[FilledButton(onPressed:()=>choose(answer),child:Text(answer,style:const TextStyle(fontSize:30))),FilledButton(onPressed:()=>choose('❌'),child:const Text('❌',style:TextStyle(fontSize:30)))]),const SizedBox(height:70)]));}
