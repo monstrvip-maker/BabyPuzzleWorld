@@ -16,19 +16,26 @@ class BabyPuzzleApp extends StatelessWidget {
   );
 }
 
-class CharacterImage extends StatelessWidget {
+class CharacterImage extends StatefulWidget {
   final String name;
   final double? width, height;
   final BoxFit fit;
   const CharacterImage(this.name, {super.key, this.width, this.height, this.fit=BoxFit.contain});
+  @override State<CharacterImage> createState() => _CharacterImageState();
+}
 
+class _CharacterImageState extends State<CharacterImage> with SingleTickerProviderStateMixin {
+  late final AnimationController _motion = AnimationController(
+    vsync: this, duration: const Duration(milliseconds: 1800),
+  )..repeat(reverse: true);
   static const Map<String, IconData> _icons = {
-    'dino': Icons.pets, 'triceratops': Icons.pets,
+    'dino': Icons.pets, 'triceratops': Icons.cruelty_free,
     'whale': Icons.water, 'octopus': Icons.waves,
-    'submarine': Icons.directions_boat, 'turtle': Icons.pets,
+    'submarine': Icons.directions_boat, 'turtle': Icons.eco,
     'firetruck': Icons.local_fire_department, 'bus': Icons.directions_bus,
-    'puppy': Icons.pets, 'kitten': Icons.pets, 'elephant': Icons.pets,
-    'lion': Icons.pets, 'apple': Icons.eco, 'banana': Icons.eco,
+    'puppy': Icons.pets, 'kitten': Icons.catching_pokemon,
+    'elephant': Icons.forest, 'lion': Icons.face,
+    'apple': Icons.restaurant, 'banana': Icons.eco,
     'butterfly': Icons.local_florist, 'rocket': Icons.rocket_launch,
   };
   static const Map<String, Color> _colors = {
@@ -41,15 +48,33 @@ class CharacterImage extends StatelessWidget {
     'apple': Color(0xFFE43C35), 'banana': Color(0xFFE9C52E),
     'butterfly': Color(0xFFDD8731), 'rocket': Color(0xFF3489C9),
   };
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: width, height: height,
-    child: FittedBox(
-      fit: fit,
-      child: Icon(_icons[name] ?? Icons.extension,
-        size: 220, color: _colors[name] ?? const Color(0xFF5476A8)),
-    ),
-  );
+  @override void dispose() { _motion.dispose(); super.dispose(); }
+  @override Widget build(BuildContext context) {
+    final color = _colors[widget.name] ?? const Color(0xFF5476A8);
+    return SizedBox(
+      width: widget.width, height: widget.height,
+      child: AnimatedBuilder(
+        animation: _motion,
+        builder: (context, child) => Transform.translate(
+          offset: Offset(0, -4 * _motion.value),
+          child: Transform.rotate(angle: (_motion.value - .5) * .05, child: child),
+        ),
+        child: Stack(alignment: Alignment.center, children: [
+          Container(
+            width: (widget.width ?? 150) * .78,
+            height: (widget.height ?? 150) * .78,
+            decoration: BoxDecoration(shape: BoxShape.circle,
+              gradient: RadialGradient(colors: [color.withOpacity(.22), color.withOpacity(.02)])),
+          ),
+          Icon(_icons[widget.name] ?? Icons.extension,
+            size: (widget.width ?? 150) * .68, color: color,
+            shadows: [Shadow(color: color.withOpacity(.24), blurRadius: 14, offset: const Offset(0, 7))]),
+          Positioned(right: 8, top: 8,
+            child: Icon(Icons.auto_awesome, size: 18, color: color.withOpacity(.7))),
+        ]),
+      ),
+    );
+  }
 }
 
 class PuzzlePieceGraphic extends StatelessWidget {
