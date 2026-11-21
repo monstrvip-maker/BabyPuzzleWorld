@@ -32,7 +32,7 @@ class CharacterImage extends StatelessWidget {
           maxLines: 1,
           softWrap: false,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 112, height: 1.0),
+          style: const TextStyle(fontSize: 250, height: 1.0),
         ),
       ),
     ),
