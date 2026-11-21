@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'character_assets.dart';
 
 class GameAudio {
@@ -12,26 +13,82 @@ class GameAudio {
  static Future<void> _play(String f) async {try{await _p.stop();await _p.play(AssetSource('audio/'+f));}catch(_){}}
 }
 class MiniGamesSection extends StatelessWidget {
- const MiniGamesSection({super.key});
- @override Widget build(BuildContext context){
- final games=<List<dynamic>>[
- ['Найди пару','🧠','Тренируй память',Color(0xFFE9E2FF),MemoryGamePage()],
- ['Найди предмет','🔎','Ищи нужную картинку',Color(0xFFFFE8D7),FindGamePage()],
- ['Угадай тень','🌙','Узнай силуэт',Color(0xFFDFF2FF),ShadowGamePage()],
- ['Сосчитай','🔢','Сколько предметов?',Color(0xFFE2F5E7),CountGamePage()],
- ['Найди цвет','🎨','Выбери нужный цвет',Color(0xFFFFE6EE),ColorGamePage()],
- ['Что лишнее?','🧩','Найди непохожее',Color(0xFFFFF2C9),OddGamePage()],
- ['Повтори ряд','🔶','Продолжи узор',Color(0xFFE3EEFF),SequenceGamePage()],
- ];
- return Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
- const Padding(padding:EdgeInsets.fromLTRB(18,12,18,10),child:Text('Другие игры',style:TextStyle(fontSize:21,fontWeight:FontWeight.w900,color:Color(0xFF243B68)))),
- SizedBox(height:154,child:ListView.separated(padding:const EdgeInsets.symmetric(horizontal:14),scrollDirection:Axis.horizontal,itemCount:games.length,separatorBuilder:(_,__)=>const SizedBox(width:12),itemBuilder:(c,i){final g=games[i];return SizedBox(width:185,child:Material(color:g[3] as Color,borderRadius:BorderRadius.circular(22),child:InkWell(borderRadius:BorderRadius.circular(22),onTap:(){GameAudio.tap();Navigator.push(context,MaterialPageRoute(builder:(_)=>g[4] as Widget));},child:Padding(padding:const EdgeInsets.all(14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(g[1] as String,style:const TextStyle(fontSize:34)),const Spacer(),Text(g[0] as String,style:const TextStyle(fontSize:17,fontWeight:FontWeight.w900,color:Color(0xFF293B5E))),Text(g[2] as String,style:const TextStyle(fontSize:12,color:Color(0xFF52627D)))])))));}))
- ]);
- }
+  final VoidCallback? onReturn;
+  const MiniGamesSection({super.key, this.onReturn});
+
+  @override
+  Widget build(BuildContext context) {
+    final games = <List<dynamic>>[
+      ['Найди пару','🧠','Тренируй память',Color(0xFFE9E2FF),MemoryGamePage()],
+      ['Найди предмет','🔎','Ищи нужную картинку',Color(0xFFFFE8D7),FindGamePage()],
+      ['Угадай тень','🌙','Узнай силуэт',Color(0xFFDFF2FF),ShadowGamePage()],
+      ['Сосчитай','🔢','Сколько предметов?',Color(0xFFE2F5E7),CountGamePage()],
+      ['Найди цвет','🎨','Выбери нужный цвет',Color(0xFFFFE6EE),ColorGamePage()],
+      ['Что лишнее?','🧩','Найди непохожее',Color(0xFFFFF2C9),OddGamePage()],
+      ['Повтори ряд','🔶','Продолжи узор',Color(0xFFE3EEFF),SequenceGamePage()],
+    ];
+    final width = (MediaQuery.sizeOf(context).width - 44) / 2;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(18, 12, 18, 10),
+          child: Text('Дополнительные игры • 7', style: TextStyle(
+            fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF243B68))),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Wrap(
+            spacing: 12, runSpacing: 12,
+            children: games.map((g) => SizedBox(
+              width: width, height: 142,
+              child: Material(
+                color: g[3] as Color,
+                borderRadius: BorderRadius.circular(22),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(22),
+                  onTap: () {
+                    GameAudio.tap();
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => g[4] as Widget,
+                    )).then((_) => onReturn?.call());
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(g[1] as String, style: const TextStyle(fontSize: 34)),
+                        const Spacer(),
+                        Text(g[0] as String, style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w900,
+                          color: Color(0xFF293B5E))),
+                        Text(g[2] as String, style: const TextStyle(
+                          fontSize: 12, color: Color(0xFF52627D))),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class GameProgress {
+  static Future<void> awardStar() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('stars', (prefs.getInt('stars') ?? 0) + 1);
+    await prefs.setInt('mini_games_completed',
+        (prefs.getInt('mini_games_completed') ?? 0) + 1);
+  }
 }
 List<MapEntry<String,String>> deck([int n=8]){final a=characterAssets.entries.toList()..shuffle();return a.take(min(n,a.length)).toList();}
 class GameShell extends StatelessWidget{final String title;final Color color;final Widget child;const GameShell(this.title,this.color,this.child,{super.key});@override Widget build(BuildContext c)=>Scaffold(backgroundColor:color,appBar:AppBar(title:Text(title),backgroundColor:Colors.transparent),body:SafeArea(child:child));}
-void won(BuildContext c,String text,VoidCallback next){GameAudio.win();showDialog<void>(context:c,builder:(d)=>AlertDialog(title:const Text('Ура! 🎉',textAlign:TextAlign.center),content:Text(text,textAlign:TextAlign.center),actions:[FilledButton(onPressed:(){Navigator.pop(d);next();},child:const Text('Дальше'))]));}
+void won(BuildContext c,String text,VoidCallback next){GameAudio.win();GameProgress.awardStar();showDialog<void>(context:c,builder:(d)=>AlertDialog(title:const Text('Ура! 🎉 +1 звезда ⭐',textAlign:TextAlign.center),content:Text('$text\\nЗвёздочка добавлена на главный экран!',textAlign:TextAlign.center),actions:[FilledButton(onPressed:(){Navigator.pop(d);next();},child:const Text('Дальше'))]));}
 Widget tile(String e,VoidCallback tap,{double size=48})=>Material(color:Colors.white,borderRadius:BorderRadius.circular(20),child:InkWell(borderRadius:BorderRadius.circular(20),onTap:tap,child:Center(child:Text(e,style:TextStyle(fontSize:size)))));
 
 class MemoryGamePage extends StatefulWidget{const MemoryGamePage({super.key});@override State<MemoryGamePage> createState()=>_MemoryState();}
