@@ -353,13 +353,28 @@ String shapeLabel(ShapeKind s) => switch (s) {
 Path shapePath(ShapeKind kind, Rect r) {
   final p=Path();
   switch(kind){
-    case ShapeKind.circle: p.addOval(r);
-    case ShapeKind.square: p.addRRect(RRect.fromRectAndRadius(r,Radius.circular(r.width*.12)));
-    case ShapeKind.triangle: p.moveTo(r.center.dx,r.top);p.lineTo(r.right,r.bottom);p.lineTo(r.left,r.bottom);p.close();
+    case ShapeKind.circle:
+      p.addOval(r);
+      break;
+    case ShapeKind.square:
+      p.addRRect(RRect.fromRectAndRadius(r,Radius.circular(r.width*.12)));
+      break;
+    case ShapeKind.triangle:
+      p.moveTo(r.center.dx,r.top);
+      p.lineTo(r.right,r.bottom);
+      p.lineTo(r.left,r.bottom);
+      p.close();
+      break;
     case ShapeKind.star:
-      for(var i=0;i<10;i++){final radius=i.isEven?r.width/2:r.width/4;final a=-pi/2+i*pi/5;final pt=Offset(r.center.dx+cos(a)*radius,r.center.dy+sin(a)*radius);if(i==0){p.moveTo(pt.dx,pt.dy);}else{p.lineTo(pt.dx,pt.dy);}}p.close();
+      for(var i=0;i<10;i++){final radius=i.isEven?r.width/2:r.width/4;final a=-pi/2+i*pi/5;final pt=Offset(r.center.dx+cos(a)*radius,r.center.dy+sin(a)*radius);if(i==0){p.moveTo(pt.dx,pt.dy);}else{p.lineTo(pt.dx,pt.dy);}}
+      p.close();
+      break;
     case ShapeKind.heart:
-      p.moveTo(r.center.dx,r.bottom);p.cubicTo(r.left-r.width*.12,r.center.dy,r.left+r.width*.15,r.top-r.height*.1,r.center.dx,r.top+r.height*.28);p.cubicTo(r.right-r.width*.15,r.top-r.height*.1,r.right+r.width*.12,r.center.dy,r.center.dx,r.bottom);p.close();
+      p.moveTo(r.center.dx,r.bottom);
+      p.cubicTo(r.left-r.width*.12,r.center.dy,r.left+r.width*.15,r.top-r.height*.1,r.center.dx,r.top+r.height*.28);
+      p.cubicTo(r.right-r.width*.15,r.top-r.height*.1,r.right+r.width*.12,r.center.dy,r.center.dx,r.bottom);
+      p.close();
+      break;
   }
   return p;
 }
