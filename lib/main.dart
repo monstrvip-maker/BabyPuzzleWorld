@@ -1,10 +1,15 @@
+import 'dart:math';
 import 'character_assets.dart';
 import 'mini_games.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(const BabyPuzzleApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  BackgroundMusic.initialize();
+  runApp(const BabyPuzzleApp());
+}
 
 class BabyPuzzleApp extends StatelessWidget {
   const BabyPuzzleApp({super.key});
@@ -13,32 +18,128 @@ class BabyPuzzleApp extends StatelessWidget {
     debugShowCheckedModeBanner: false, title: 'Baby Puzzle World',
     theme: ThemeData(useMaterial3: true, fontFamily: 'Roboto', colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF3478E8))),
     home: const HomePage(),
+    builder: (context, child) => Stack(
+      fit: StackFit.expand,
+      children: [
+        child ?? const SizedBox.shrink(),
+        const Positioned(
+          right: 14,
+          bottom: 18,
+          child: SafeArea(child: MusicToggle()),
+        ),
+      ],
+    ),
   );
 }
 
-class CharacterImage extends StatelessWidget {
+class CharacterImage extends StatefulWidget {
   final String name;
   final double? width, height;
   final BoxFit fit;
   const CharacterImage(this.name, {super.key, this.width, this.height, this.fit=BoxFit.contain});
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: width,
-    height: height,
-    child: Center(
-      child: FittedBox(
-        fit: fit,
-        alignment: Alignment.center,
-        child: Text(
-          characterAssets[name] ?? '🧩',
-          maxLines: 1,
-          softWrap: false,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 250, height: 1.0),
-        ),
-      ),
-    ),
-  );
+  @override State<CharacterImage> createState() => _CharacterImageState();
+}
+
+class _CharacterImageState extends State<CharacterImage> with SingleTickerProviderStateMixin {
+  late final AnimationController _motion = AnimationController(vsync:this,duration:const Duration(milliseconds:1900))..repeat(reverse:true);
+  @override void dispose(){_motion.dispose();super.dispose();}
+  @override Widget build(BuildContext context){
+    return SizedBox(width:widget.width,height:widget.height,child:AnimatedBuilder(
+      animation:_motion,
+      builder:(context,child)=>Transform.translate(offset:Offset(0,-4*_motion.value),child:Transform.rotate(angle:(_motion.value-.5)*.035,child:child)),
+      child:CustomPaint(painter:_CharacterPainter(widget.name),child:const SizedBox.expand()),
+    ));
+  }
+}
+
+class _CharacterPainter extends CustomPainter {
+  final String name;
+  _CharacterPainter(this.name);
+  static const palette=<String,Color>{
+    'dino':Color(0xFF42AD58),'triceratops':Color(0xFFE65D49),'whale':Color(0xFF39A9E8),'octopus':Color(0xFFAD72D5),
+    'submarine':Color(0xFFFFB52E),'turtle':Color(0xFF48A96A),'firetruck':Color(0xFFE64A3B),'bus':Color(0xFFFFC247),
+    'puppy':Color(0xFFB87950),'kitten':Color(0xFFFFB33D),'elephant':Color(0xFF8DA6BD),'lion':Color(0xFFE5A62D),
+    'apple':Color(0xFFE84B45),'banana':Color(0xFFF4D044),'butterfly':Color(0xFFB16BD2),'rocket':Color(0xFF438FD0),
+  };
+  @override void paint(Canvas canvas,Size size){
+    final scale=min(size.width,size.height)/200;
+    canvas.save();canvas.translate((size.width-200*scale)/2,(size.height-200*scale)/2);canvas.scale(scale);
+    final c=palette[name]??const Color(0xFF5476A8);
+    final ink=Paint()..color=const Color(0xFF493A45);
+    final fill=Paint()..shader=LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color.lerp(c,Colors.white,.28)!,c,Color.lerp(c,Colors.black,.13)!],stops:const [0,.58,1]).createShader(const Rect.fromLTWH(20,20,160,160));
+    final pale=Paint()..color=Color.lerp(c,Colors.white,.58)!;
+    void oval(double x,double y,double w,double h,Paint p)=>canvas.drawOval(Rect.fromLTWH(x,y,w,h),p);
+    void circle(double x,double y,double r,Paint p)=>canvas.drawCircle(Offset(x,y),r,p);
+    void path(List<Offset> pts,Paint p,{bool close=true}){final q=Path()..moveTo(pts.first.dx,pts.first.dy);for(final v in pts.skip(1)){q.lineTo(v.dx,v.dy);}if(close)q.close();canvas.drawPath(q,p);}
+    // soft halo behind every original hand-drawn character
+    circle(100,102,88,Paint()..color=c.withOpacity(.10));
+    circle(100,102,78,Paint()..color=c.withOpacity(.045));
+    switch(name){
+      case 'dino':
+        oval(38,76,126,94,fill);oval(118,35,58,57,fill);path([const Offset(47,83),const Offset(24,52),const Offset(57,61)],fill);path([const Offset(75,78),const Offset(67,43),const Offset(99,62)],fill);
+        for(var i=0;i<4;i++){path([Offset(60+i*22,78),Offset(70+i*22,55),Offset(80+i*22,78)],pale);}
+        oval(61,151,27,24,fill);oval(120,151,27,24,fill);oval(145,52,7,8,ink);oval(159,52,7,8,Paint()..color=Colors.white);
+        oval(152,76,25,9,Paint()..color=const Color(0xFFEF8C82));break;
+      case 'triceratops':
+        oval(35,80,130,88,fill);oval(105,47,72,65,fill);
+        path([const Offset(118,51),const Offset(110,20),const Offset(135,43)],pale);path([const Offset(148,51),const Offset(169,20),const Offset(163,57)],pale);
+        for(var i=0;i<3;i++)circle(111+i*20,106,5,pale);circle(151,72,6,ink);oval(166,90,22,12,pale);break;
+      case 'whale':
+        oval(24,68,150,94,fill);path([const Offset(42,111),const Offset(12,91),const Offset(18,131)],fill);path([const Offset(42,111),const Offset(12,143),const Offset(55,130)],fill);
+        oval(65,139,40,18,pale);circle(144,94,6,ink);canvas.drawArc(const Rect.fromLTWH(132,101,22,18),0,pi/2,false,Paint()..color=ink.color..style=PaintingStyle.stroke..strokeWidth=3);for(var i=0;i<3;i++)oval(155+i*8,40+i*7,25,12,Paint()..color=const Color(0xFF8BD6F5));break;
+      case 'octopus':
+        for(var i=0;i<6;i++){final x=35.0+i*24;canvas.drawPath(Path()..moveTo(100,125)..quadraticBezierTo(x,145,x+(i.isEven?8:-8),177),Paint()..color=c..style=PaintingStyle.stroke..strokeWidth=17..strokeCap=StrokeCap.round);}
+        circle(100,91,58,fill);circle(79,86,6,ink);circle(120,86,6,ink);canvas.drawArc(const Rect.fromLTWH(84,96,32,21),0,pi,false,Paint()..color=ink.color..style=PaintingStyle.stroke..strokeWidth=3);break;
+      case 'submarine':
+        oval(25,70,150,76,fill);path([const Offset(87,72),const Offset(96,43),const Offset(130,43),const Offset(141,72)],fill);for(var i=0;i<3;i++){circle(62+i*34,106,11,pale);}path([const Offset(72,146),const Offset(72,166),const Offset(126,166),const Offset(126,146)],fill);break;
+      case 'turtle':
+        oval(35,62,132,104,fill);oval(72,83,62,63,pale);for(var i=0;i<4;i++){oval(i%2==0?26:145,i<2?76:128,34,30,fill);}circle(165,96,28,fill);circle(174,88,5,ink);path([const Offset(41,112),const Offset(17,124),const Offset(42,131)],fill);break;
+      case 'firetruck':
+        canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(24,67,150,91),const Radius.circular(17)),fill);canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(125,42,48,56),const Radius.circular(10)),fill);oval(43,142,35,35,ink);oval(129,142,35,35,ink);oval(51,150,18,18,pale);oval(137,150,18,18,pale);for(var i=0;i<3;i++){canvas.drawRect(Rect.fromLTWH(45+i*27,84,19,22),pale);}break;
+      case 'bus':
+        canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(22,45,156,112),const Radius.circular(23)),fill);for(var i=0;i<4;i++){canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(34+i*35,61,28,34),const Radius.circular(6)),pale);}oval(42,139,34,34,ink);oval(129,139,34,34,ink);break;
+      case 'puppy':
+        oval(23,50,56,85,Paint()..color=const Color(0xFF8D5948));oval(121,50,56,85,Paint()..color=const Color(0xFF8D5948));circle(100,103,68,fill);oval(62,98,76,62,pale);circle(80,94,6,ink);circle(121,94,6,ink);oval(91,111,18,13,ink);canvas.drawArc(const Rect.fromLTWH(83,117,34,23),0,pi,false,Paint()..color=ink.color..style=PaintingStyle.stroke..strokeWidth=4);break;
+      case 'kitten':
+        path([const Offset(35,82),const Offset(43,22),const Offset(86,57),const Offset(113,57),const Offset(157,22),const Offset(166,82)],fill);circle(100,105,66,fill);circle(76,99,7,ink);circle(124,99,7,ink);path([const Offset(91,119),const Offset(100,127),const Offset(109,119)],ink);for(var i=0;i<3;i++){canvas.drawLine(Offset(57,117+i*9),Offset(20,108+i*13),Paint()..color=ink.color..strokeWidth=3);}break;
+      case 'elephant':
+        oval(35,42,130,118,fill);oval(129,92,42,78,fill);oval(138,104,25,58,pale);circle(68,91,27,pale);circle(132,91,27,pale);circle(91,87,6,ink);circle(128,87,6,ink);break;
+      case 'lion':
+        for(var i=0;i<12;i++){final a=i*pi/6;circle(100+62*cos(a),103+62*sin(a),27,Paint()..color=const Color(0xFF98603D));}circle(100,103,57,fill);oval(65,94,70,58,pale);circle(83,88,6,ink);circle(117,88,6,ink);path([const Offset(91,109),const Offset(100,117),const Offset(109,109)],ink);break;
+      case 'apple':
+        circle(76,108,48,fill);circle(126,108,48,fill);path([const Offset(100,65),const Offset(95,39),const Offset(110,32),const Offset(111,67)],Paint()..color=const Color(0xFF765039));oval(107,31,48,22,Paint()..color=const Color(0xFF54B85B));break;
+      case 'banana':
+        final p=Path()..moveTo(31,72)..quadraticBezierTo(78,158,159,111)..quadraticBezierTo(125,181,65,137)..quadraticBezierTo(34,112,31,72)..close();canvas.drawPath(p,fill);canvas.drawPath(p,Paint()..color=const Color(0xFFFFE98A)..style=PaintingStyle.stroke..strokeWidth=8);break;
+      case 'butterfly':
+        oval(22,55,70,70,Paint()..color=const Color(0xFFEF8AB7));oval(108,55,70,70,Paint()..color=const Color(0xFF73BCEB));oval(31,119,59,47,Paint()..color=const Color(0xFFFFC75C));oval(110,119,59,47,Paint()..color=const Color(0xFFB18AE5));canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(93,63,14,104),const Radius.circular(8)),ink);canvas.drawLine(const Offset(98,66),const Offset(78,36),ink..strokeWidth=4);canvas.drawLine(const Offset(102,66),const Offset(122,36),ink..strokeWidth=4);break;
+      case 'rocket':
+        canvas.save();canvas.translate(100,102);canvas.rotate(-.65);canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-31,-75,62,132),const Radius.circular(30)),fill);path([const Offset(-31,34),const Offset(-62,75),const Offset(-23,60)],Paint()..color=const Color(0xFFE85D4A));path([const Offset(31,34),const Offset(62,75),const Offset(23,60)],Paint()..color=const Color(0xFFE85D4A));circle(0,-24,17,pale);path([const Offset(-19,56),const Offset(0,99),const Offset(19,56)],Paint()..color=const Color(0xFFFFB33D));canvas.restore();break;
+    }
+    // Universal picture-book finish: soft outline, glossy highlight and tiny sparkles.
+    final outline=Paint()..color=Color.lerp(c,ink.color,.20)!.withOpacity(.42)..style=PaintingStyle.stroke..strokeWidth=2.2;
+    if(name=='dino'||name=='triceratops'||name=='puppy'||name=='kitten'||name=='elephant'||name=='lion'||name=='octopus'||name=='turtle'||name=='whale'){
+      oval(48,42,112,24,Paint()..color=Colors.white.withOpacity(.17));
+      oval(55,48,46,13,Paint()..color=Colors.white.withOpacity(.20));
+    }
+    // Bright eye glints make the little friends feel alive.
+    if(!['rocket','banana','apple','firetruck','bus','submarine','butterfly'].contains(name)){
+      circle(148,49,2.8,Paint()..color=Colors.white);
+      circle(79,91,2.5,Paint()..color=Colors.white.withOpacity(.9));
+    }
+    if(!['rocket','banana','apple','firetruck','bus','submarine'].contains(name)){
+      circle(73,119,7,Paint()..color=const Color(0xFFFF9B9B).withOpacity(.32));
+      circle(128,119,7,Paint()..color=const Color(0xFFFF9B9B).withOpacity(.32));
+      circle(71,117,2.2,Paint()..color=const Color(0xFFFFC2B8));
+      circle(126,117,2.2,Paint()..color=const Color(0xFFFFC2B8));
+    }
+    // A few twinkles around the character, like a polished animated-movie sticker.
+    for(final p in [const Offset(28,48),const Offset(174,25),const Offset(177,153)]){
+      final star=Path()..moveTo(p.dx,p.dy-5)..lineTo(p.dx+1.5,p.dy-1.5)..lineTo(p.dx+5,p.dy)..lineTo(p.dx+1.5,p.dy+1.5)..lineTo(p.dx,p.dy+5)..lineTo(p.dx-1.5,p.dy+1.5)..lineTo(p.dx-5,p.dy)..lineTo(p.dx-1.5,p.dy-1.5)..close();
+      canvas.drawPath(star,Paint()..color=Colors.white.withOpacity(.78));
+    }
+    canvas.restore();
+  }
+  @override bool shouldRepaint(covariant _CharacterPainter old)=>old.name!=name;
 }
 
 class PuzzlePieceGraphic extends StatelessWidget {
@@ -113,7 +214,7 @@ class _HomePageState extends State<HomePage> {
         const Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('Мир открытий!',style:TextStyle(fontSize:23,color:Colors.white,fontWeight:FontWeight.w900)),SizedBox(height:5),Text('Весёлые пазлы без интернета',style:TextStyle(color:Colors.white,fontSize:15))])),
         CharacterImage('dino', width:104, height:104)
       ]))),
-      const SliverToBoxAdapter(child: MiniGamesSection()),
+      SliverToBoxAdapter(child: MiniGamesSection(onReturn: _load)),
       SliverToBoxAdapter(child:Padding(padding:const EdgeInsets.symmetric(horizontal:18,vertical:4),child:Text('Выбери мир',style:TextStyle(fontSize:21,fontWeight:FontWeight.w900,color:Color(0xFF243B68))))),
       SliverPadding(padding:const EdgeInsets.all(14),sliver:SliverGrid(delegate:SliverChildBuilderDelegate((c,i){
         final cat=cats[i+1]; final list=items.where((e)=>e.category==cat).toList(); final item=list.first;
@@ -223,8 +324,10 @@ class _PuzzlePageState extends State<PuzzlePage> {
       height: 74,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        gradient: const LinearGradient(begin: Alignment.topLeft,end: Alignment.bottomRight,colors:[Color(0xFFFFFFFF),Color(0xFFEAF4FF)]),
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: Colors.white, width: 2.5),
+        boxShadow: [BoxShadow(color: const Color(0xFF526A9B).withOpacity(.14),blurRadius:10,offset:const Offset(0,5))],
       ),
       child: Center(
         child: PuzzlePieceGraphic(
@@ -321,9 +424,12 @@ class _PuzzlePageState extends State<PuzzlePage> {
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(.55),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.white, width: 3),
+                              gradient: slots[index] == null
+                                ? const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0x99FFFFFF),Color(0x55D8E8FF)])
+                                : const LinearGradient(colors:[Colors.white,Color(0xFFF5FAFF)]),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: candidates.isNotEmpty ? const Color(0xFFFFC84A) : Colors.white, width: candidates.isNotEmpty ? 4 : 3),
+                              boxShadow: [BoxShadow(color: const Color(0xFF5974A5).withOpacity(.10),blurRadius:9,offset:const Offset(0,4))],
                             ),
                             child: slots[index] == null
                                 ? const Center(
@@ -363,8 +469,10 @@ class _PuzzlePageState extends State<PuzzlePage> {
                 margin: const EdgeInsets.fromLTRB(12, 0, 12, 18),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(.55),
-                  borderRadius: BorderRadius.circular(22),
+                  gradient: const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xDDFFFFFF),Color(0x99E4F1FF)]),
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [BoxShadow(color: const Color(0xFF5674A8).withOpacity(.10),blurRadius:16,offset:const Offset(0,7))],
                 ),
                 child: Wrap(
                   alignment: WrapAlignment.center,

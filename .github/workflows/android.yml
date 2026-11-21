@@ -2,7 +2,7 @@ name: Android APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, work/verified-apk-build]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -34,6 +34,9 @@ jobs:
       - name: Generate Android project files
         run: flutter create --org com.monstrvip --platforms=android --project-name baby_puzzle_world .
 
+      - name: Remove generated Flutter template test
+        run: rm -f test/widget_test.dart
+
       - name: Generate offline sound effects
         run: python3 tool/generate_audio.py
 
@@ -44,8 +47,11 @@ jobs:
         continue-on-error: true
         run: flutter analyze
 
+      - name: Run tests
+        run: flutter test
+
       - name: Verify generated sound assets
-        run: test -s assets/audio/tap.wav && test -s assets/audio/correct.wav && test -s assets/audio/win.wav
+        run: test -s assets/audio/tap.wav && test -s assets/audio/correct.wav && test -s assets/audio/win.wav && test -s assets/audio/background.wav
 
       - name: Build APK
         run: flutter build apk --release
