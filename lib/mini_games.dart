@@ -328,7 +328,7 @@ class _ShapeFitGamePageState extends State<ShapeFitGamePage> {
     target=ShapeKind.values[random.nextInt(ShapeKind.values.length)];
     final others=ShapeKind.values.where((x)=>x!=target).toList()..shuffle(random);
     options=<ShapeKind>[target,...others.take(3)]..shuffle(random);
-    hero=random.nextInt(heroNames.length);holeIndex=random.nextInt(holeSpots.length);
+    hero=round % heroNames.length;holeIndex=random.nextInt(holeSpots.length);
     heroColor=heroColors[hero];selected=null;placed=false;round++;
   }
   @override void initState(){super.initState();nextRound();}
