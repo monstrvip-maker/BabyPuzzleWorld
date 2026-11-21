@@ -66,7 +66,7 @@ class _CharacterPainter extends CustomPainter {
     canvas.save();canvas.translate((size.width-200*scale)/2,(size.height-200*scale)/2);canvas.scale(scale);
     final c=palette[name]??const Color(0xFF5476A8);
     final ink=Paint()..color=const Color(0xFF493A45);
-    final fill=Paint()..color=c;
+    final fill=Paint()..shader=LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color.lerp(c,Colors.white,.28)!,c,Color.lerp(c,Colors.black,.13)!],stops:const [0,.58,1]).createShader(const Rect.fromLTWH(20,20,160,160));
     final pale=Paint()..color=Color.lerp(c,Colors.white,.58)!;
     void oval(double x,double y,double w,double h,Paint p)=>canvas.drawOval(Rect.fromLTWH(x,y,w,h),p);
     void circle(double x,double y,double r,Paint p)=>canvas.drawCircle(Offset(x,y),r,p);
