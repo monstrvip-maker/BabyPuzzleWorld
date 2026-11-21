@@ -28,6 +28,31 @@ class CharacterImage extends StatelessWidget {
   );
 }
 
+class PuzzlePieceGraphic extends StatelessWidget {
+  final String asset;
+  final int piece;
+  final double size;
+  const PuzzlePieceGraphic({super.key, required this.asset, required this.piece, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final x = piece % 2;
+    final y = piece ~/ 2;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipRect(
+        child: Align(
+          alignment: Alignment(x == 0 ? -1 : 1, y == 0 ? -1 : 1),
+          widthFactor: .5,
+          heightFactor: .5,
+          child: CharacterImage(asset, width: size * 2, height: size * 2),
+        ),
+      ),
+    );
+  }
+}
+
 class PuzzleItem {
   final String name, asset, category;
   final Color color;
@@ -178,9 +203,10 @@ class _PuzzlePageState extends State<PuzzlePage> {
         borderRadius: BorderRadius.circular(14),
       ),
       child: Center(
-        child: Text(
-          characterAssets[widget.item.asset] ?? '🧩',
-          style: const TextStyle(fontSize: 48),
+        child: PuzzlePieceGraphic(
+          asset: widget.item.asset,
+          piece: piece,
+          size: 66,
         ),
       ),
     );
@@ -286,7 +312,7 @@ class _PuzzlePageState extends State<PuzzlePage> {
                                 : Stack(
                                     alignment: Alignment.center,
                                     children: [
-                                      CharacterImage(widget.item.asset, width: 90, height: 90),
+                                      PuzzlePieceGraphic(asset: widget.item.asset, piece: slots[index]!, size: 132),
                                       Positioned(
                                         right: 5,
                                         top: 5,
