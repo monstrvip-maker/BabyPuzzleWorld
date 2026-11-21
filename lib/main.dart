@@ -115,8 +115,28 @@ class _CharacterPainter extends CustomPainter {
       case 'rocket':
         canvas.save();canvas.translate(100,102);canvas.rotate(-.65);canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTWH(-31,-75,62,132),const Radius.circular(30)),fill);path([const Offset(-31,34),const Offset(-62,75),const Offset(-23,60)],Paint()..color=const Color(0xFFE85D4A));path([const Offset(31,34),const Offset(62,75),const Offset(23,60)],Paint()..color=const Color(0xFFE85D4A));circle(0,-24,17,pale);path([const Offset(-19,56),const Offset(0,99),const Offset(19,56)],Paint()..color=const Color(0xFFFFB33D));canvas.restore();break;
     }
-    // tiny friendly cheeks and shine
-    if(!['rocket','banana','apple','firetruck','bus','submarine'].contains(name)){circle(73,119,5,Paint()..color=const Color(0xFFFFA4A4).withOpacity(.7));circle(128,119,5,Paint()..color=const Color(0xFFFFA4A4).withOpacity(.7));}
+    // Universal picture-book finish: soft outline, glossy highlight and tiny sparkles.
+    final outline=Paint()..color=Color.lerp(c,ink.color,.20)!.withOpacity(.42)..style=PaintingStyle.stroke..strokeWidth=2.2;
+    if(name=='dino'||name=='triceratops'||name=='puppy'||name=='kitten'||name=='elephant'||name=='lion'||name=='octopus'||name=='turtle'||name=='whale'){
+      oval(48,42,112,24,Paint()..color=Colors.white.withOpacity(.17));
+      oval(55,48,46,13,Paint()..color=Colors.white.withOpacity(.20));
+    }
+    // Bright eye glints make the little friends feel alive.
+    if(!['rocket','banana','apple','firetruck','bus','submarine','butterfly'].contains(name)){
+      circle(148,49,2.8,Paint()..color=Colors.white);
+      circle(79,91,2.5,Paint()..color=Colors.white.withOpacity(.9));
+    }
+    if(!['rocket','banana','apple','firetruck','bus','submarine'].contains(name)){
+      circle(73,119,7,Paint()..color=const Color(0xFFFF9B9B).withOpacity(.32));
+      circle(128,119,7,Paint()..color=const Color(0xFFFF9B9B).withOpacity(.32));
+      circle(71,117,2.2,Paint()..color=const Color(0xFFFFC2B8));
+      circle(126,117,2.2,Paint()..color=const Color(0xFFFFC2B8));
+    }
+    // A few twinkles around the character, like a polished animated-movie sticker.
+    for(final p in [const Offset(28,48),const Offset(174,25),const Offset(177,153)]){
+      final star=Path()..moveTo(p.dx,p.dy-5)..lineTo(p.dx+1.5,p.dy-1.5)..lineTo(p.dx+5,p.dy)..lineTo(p.dx+1.5,p.dy+1.5)..lineTo(p.dx,p.dy+5)..lineTo(p.dx-1.5,p.dy+1.5)..lineTo(p.dx-5,p.dy)..lineTo(p.dx-1.5,p.dy-1.5)..close();
+      canvas.drawPath(star,Paint()..color=Colors.white.withOpacity(.78));
+    }
     canvas.restore();
   }
   @override bool shouldRepaint(covariant _CharacterPainter old)=>old.name!=name;
@@ -304,8 +324,10 @@ class _PuzzlePageState extends State<PuzzlePage> {
       height: 74,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        gradient: const LinearGradient(begin: Alignment.topLeft,end: Alignment.bottomRight,colors:[Color(0xFFFFFFFF),Color(0xFFEAF4FF)]),
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: Colors.white, width: 2.5),
+        boxShadow: [BoxShadow(color: const Color(0xFF526A9B).withOpacity(.14),blurRadius:10,offset:const Offset(0,5))],
       ),
       child: Center(
         child: PuzzlePieceGraphic(
@@ -402,9 +424,12 @@ class _PuzzlePageState extends State<PuzzlePage> {
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(.55),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: Colors.white, width: 3),
+                              gradient: slots[index] == null
+                                ? const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0x99FFFFFF),Color(0x55D8E8FF)])
+                                : const LinearGradient(colors:[Colors.white,Color(0xFFF5FAFF)]),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: candidates.isNotEmpty ? const Color(0xFFFFC84A) : Colors.white, width: candidates.isNotEmpty ? 4 : 3),
+                              boxShadow: [BoxShadow(color: const Color(0xFF5974A5).withOpacity(.10),blurRadius:9,offset:const Offset(0,4))],
                             ),
                             child: slots[index] == null
                                 ? const Center(
@@ -444,8 +469,10 @@ class _PuzzlePageState extends State<PuzzlePage> {
                 margin: const EdgeInsets.fromLTRB(12, 0, 12, 18),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(.55),
-                  borderRadius: BorderRadius.circular(22),
+                  gradient: const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xDDFFFFFF),Color(0x99E4F1FF)]),
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [BoxShadow(color: const Color(0xFF5674A8).withOpacity(.10),blurRadius:16,offset:const Offset(0,7))],
                 ),
                 child: Wrap(
                   alignment: WrapAlignment.center,
