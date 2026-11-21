@@ -35,7 +35,54 @@ class _MemoryGamePageState extends State<MemoryGamePage>{
   if(opened.length==2){moves++;final pair=opened.toList();if(order[pair[0]]==order[pair[1]]){await Future.delayed(const Duration(milliseconds:300));if(!mounted)return;setState((){matched.addAll(pair);opened.clear();});_winSound();if(matched.length==order.length)_complete();}else{locked=true;await Future.delayed(const Duration(milliseconds:800));if(!mounted)return;setState((){opened.clear();locked=false;});}}
  }
  void _complete(){showDialog(context:context,builder:(c)=>AlertDialog(title:const Text('Умница! 🎉',textAlign:TextAlign.center),content:Text('Все пары найдены! Ходов: $moves',textAlign:TextAlign.center),actions:[TextButton(onPressed:(){Navigator.pop(c);setState(_reset);},child:const Text('Ещё раз')),FilledButton(onPressed:(){Navigator.pop(c);Navigator.pop(context);},child:const Text('Готово'))]));}
- @override Widget build(BuildContext context)=>Scaffold(backgroundColor:const Color(0xFFF2ECFF),appBar:AppBar(title:const Text('Найди пару'),backgroundColor:Colors.transparent,actions:[IconButton(onPressed:()=>setState(_reset),icon:const Icon(Icons.refresh))]),body:Column(children:[Padding(padding:const EdgeInsets.all(16),child:Text('Открой две одинаковые картинки • Ходы: $moves',style:const TextStyle(fontSize:17,fontWeight:FontWeight.bold))),Expanded(child:GridView.builder(padding:const EdgeInsets.all(14),itemCount:order.length,gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3,crossAxisSpacing:12,mainAxisSpacing:12),itemBuilder:(c,i){final show=opened.contains(i)||matched.contains(i);return GestureDetector(onTap:()=>_flip(i),child:AnimatedContainer(duration:const Duration(milliseconds:220),decoration:BoxDecoration(color:show?Colors.white:const Color(0xFF8B79D9),borderRadius:BorderRadius.circular(20),boxShadow:[BoxShadow(color:Colors.black.withOpacity(.08),blurRadius:8,offset:const Offset(0,4))]),child:Center(child:AnimatedSwitcher(duration:const Duration(milliseconds:180),child:Text(show?cards[order[i]].value:'❔',key:ValueKey(show?order[i].toString():'back'+i.toString()),style:const TextStyle(fontSize:48)))));}))]));}
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2ECFF),
+      appBar: AppBar(
+        title: const Text('Найди пару'),
+        backgroundColor: Colors.transparent,
+        actions: [IconButton(onPressed: () => setState(_reset), icon: const Icon(Icons.refresh))],
+      ),
+      body: Column(children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text('Открой две одинаковые картинки • Ходы: $moves', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+        ),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(14),
+            itemCount: order.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 12),
+            itemBuilder: (context, index) {
+              final visible = opened.contains(index) || matched.contains(index);
+              return GestureDetector(
+                onTap: () => _flip(index),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  decoration: BoxDecoration(
+                    color: visible ? Colors.white : const Color(0xFF8B79D9),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(.08), blurRadius: 8, offset: const Offset(0, 4))],
+                  ),
+                  child: Center(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 180),
+                      child: Text(
+                        visible ? cards[order[index]].value : '❔',
+                        key: ValueKey(visible ? order[index].toString() : 'back$index'),
+                        style: const TextStyle(fontSize: 48),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ]),
+    );
+  }
 }
 
 class FindGamePage extends StatefulWidget{const FindGamePage({super.key});@override State<FindGamePage> createState()=>_FindGamePageState();}
