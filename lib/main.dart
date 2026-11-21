@@ -72,7 +72,8 @@ class _CharacterPainter extends CustomPainter {
     void circle(double x,double y,double r,Paint p)=>canvas.drawCircle(Offset(x,y),r,p);
     void path(List<Offset> pts,Paint p,{bool close=true}){final q=Path()..moveTo(pts.first.dx,pts.first.dy);for(final v in pts.skip(1)){q.lineTo(v.dx,v.dy);}if(close)q.close();canvas.drawPath(q,p);}
     // soft halo behind every original hand-drawn character
-    circle(100,102,88,Paint()..shader=RadialGradient(colors:[c.withOpacity(.23),c.withOpacity(.015)]).createShader(const Rect.fromCircle(center:Offset(100,102),radius:88)));
+    circle(100,102,88,Paint()..color=c.withOpacity(.10));
+    circle(100,102,78,Paint()..color=c.withOpacity(.045));
     switch(name){
       case 'dino':
         oval(38,76,126,94,fill);oval(118,35,58,57,fill);path([const Offset(47,83),const Offset(24,52),const Offset(57,61)],fill);path([const Offset(75,78),const Offset(67,43),const Offset(99,62)],fill);
