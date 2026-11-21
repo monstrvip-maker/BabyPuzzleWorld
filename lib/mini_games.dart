@@ -18,59 +18,114 @@ class MiniGamesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final games = <List<dynamic>>[
-      ['Найди пару','🧠','Тренируй память',Color(0xFFE9E2FF),MemoryGamePage()],
-      ['Найди предмет','🔎','Ищи нужную картинку',Color(0xFFFFE8D7),FindGamePage()],
-      ['Угадай тень','🌙','Узнай силуэт',Color(0xFFDFF2FF),ShadowGamePage()],
-      ['Сосчитай','🔢','Сколько предметов?',Color(0xFFE2F5E7),CountGamePage()],
-      ['Найди цвет','🎨','Выбери нужный цвет',Color(0xFFFFE6EE),ColorGamePage()],
-      ['Что лишнее?','🧩','Найди непохожее',Color(0xFFFFF2C9),OddGamePage()],
-      ['Повтори ряд','🔶','Продолжи узор',Color(0xFFE3EEFF),SequenceGamePage()],
+    final categories = <Map<String, dynamic>>[
+      {
+        'title': 'Память и внимание',
+        'subtitle': 'Ищи, запоминай и сравнивай',
+        'games': <List<dynamic>>[
+          ['Найди пару','🧠','Тренируй память',Color(0xFFE9E2FF),MemoryGamePage()],
+          ['Найди предмет','🔎','Ищи нужную картинку',Color(0xFFFFE8D7),FindGamePage()],
+          ['Угадай тень','🌙','Узнай силуэт',Color(0xFFDFF2FF),ShadowGamePage()],
+          ['Что лишнее?','🧩','Найди непохожее',Color(0xFFFFF2C9),OddGamePage()],
+        ],
+      },
+      {
+        'title': 'Учимся и считаем',
+        'subtitle': 'Цвета, числа и наблюдательность',
+        'games': <List<dynamic>>[
+          ['Сосчитай','🔢','Сколько предметов?',Color(0xFFE2F5E7),CountGamePage()],
+          ['Найди цвет','🎨','Выбери нужный цвет',Color(0xFFFFE6EE),ColorGamePage()],
+        ],
+      },
+      {
+        'title': 'Логика и узоры',
+        'subtitle': 'Продолжай последовательности',
+        'games': <List<dynamic>>[
+          ['Повтори ряд','🔶','Продолжи узор',Color(0xFFE3EEFF),SequenceGamePage()],
+        ],
+      },
     ];
-    final width = (MediaQuery.sizeOf(context).width - 44) / 2;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: EdgeInsets.fromLTRB(18, 12, 18, 10),
-          child: Text('Дополнительные игры • 7', style: TextStyle(
+          padding: EdgeInsets.fromLTRB(18, 12, 18, 4),
+          child: Text('Дополнительные игры', style: TextStyle(
             fontSize: 21, fontWeight: FontWeight.w900, color: Color(0xFF243B68))),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Wrap(
-            spacing: 12, runSpacing: 12,
-            children: games.map((g) => SizedBox(
-              width: width, height: 142,
-              child: Material(
-                color: g[3] as Color,
-                borderRadius: BorderRadius.circular(22),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(22),
-                  onTap: () {
-                    GameAudio.tap();
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => g[4] as Widget,
-                    )).then((_) => onReturn?.call());
+        ...categories.map((category) {
+          final games = category['games'] as List<List<dynamic>>;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 2),
+                child: Text(category['title'] as String, style: const TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF30456D))),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 9),
+                child: Text(category['subtitle'] as String, style: const TextStyle(
+                  fontSize: 12, color: Color(0xFF71809A))),
+              ),
+              SizedBox(
+                height: 146,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: games.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final game = games[index];
+                    return SizedBox(
+                      width: 190,
+                      child: Material(
+                        color: game[3] as Color,
+                        borderRadius: BorderRadius.circular(22),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(22),
+                          onTap: () {
+                            GameAudio.tap();
+                            Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => game[4] as Widget,
+                            )).then((_) => onReturn?.call());
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(game[1] as String,
+                                  style: const TextStyle(fontSize: 34)),
+                                const Spacer(),
+                                Text(game[0] as String, style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w900,
+                                  color: Color(0xFF293B5E))),
+                                Text(game[2] as String, style: const TextStyle(
+                                  fontSize: 12, color: Color(0xFF52627D))),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(g[1] as String, style: const TextStyle(fontSize: 34)),
-                        const Spacer(),
-                        Text(g[0] as String, style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w900,
-                          color: Color(0xFF293B5E))),
-                        Text(g[2] as String, style: const TextStyle(
-                          fontSize: 12, color: Color(0xFF52627D))),
-                      ],
-                    ),
-                  ),
                 ),
               ),
-            )).toList(),
+            ],
+          );
+        }),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(18, 7, 18, 2),
+          child: Row(
+            children: [
+              Icon(Icons.swipe, size: 18, color: Color(0xFF71809A)),
+              SizedBox(width: 6),
+              Text('Листай игры вправо и влево', style: TextStyle(
+                fontSize: 12, color: Color(0xFF71809A))),
+            ],
           ),
         ),
       ],
